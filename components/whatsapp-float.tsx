@@ -1,10 +1,10 @@
 import { WhatsAppIcon } from "@/components/site-header"
-import { WHATSAPP_NUMBER } from "@/lib/products"
+import { WHATSAPP_NUMBER as DEFAULT_WHATSAPP_NUMBER } from "@/lib/products"
 
-export function WhatsAppFloat() {
+export function WhatsAppFloat({ whatsappNumber = DEFAULT_WHATSAPP_NUMBER }: { whatsappNumber?: string }) {
   return (
     <a
-      href={`https://wa.me/${WHATSAPP_NUMBER}`}
+      href={`https://wa.me/${whatsappNumber}`}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Contactez-nous sur WhatsApp"

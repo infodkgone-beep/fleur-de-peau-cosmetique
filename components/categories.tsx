@@ -1,5 +1,4 @@
 import { Sparkles, Flower2, Sun, Droplets, ShieldCheck, Leaf, type LucideIcon } from "lucide-react"
-import { categories } from "@/lib/products"
 
 const iconMap: Record<string, LucideIcon> = {
   Sparkles,
@@ -10,7 +9,11 @@ const iconMap: Record<string, LucideIcon> = {
   Leaf,
 }
 
-export function Categories() {
+type Category = { name: string; description: string | null; icon: string | null }
+
+export function Categories({ categories }: { categories: Category[] }) {
+  if (categories.length === 0) return null
+
   return (
     <section id="categories" className="mx-auto max-w-7xl px-4 py-14 sm:px-6 md:py-20">
       <div className="mx-auto max-w-2xl text-center">
@@ -22,7 +25,7 @@ export function Categories() {
 
       <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3">
         {categories.map((cat) => {
-          const Icon = iconMap[cat.icon] ?? Sparkles
+          const Icon = iconMap[cat.icon ?? ""] ?? Sparkles
           return (
             <a
               key={cat.name}

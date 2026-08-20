@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { X } from "lucide-react"
-import { announcements } from "@/lib/products"
+import { announcements as defaultAnnouncements } from "@/lib/products"
 
-export function AnnouncementBar() {
+export function AnnouncementBar({ announcements = defaultAnnouncements }: { announcements?: string[] }) {
   const [visible, setVisible] = useState(true)
   const [index, setIndex] = useState(0)
 
@@ -16,7 +16,7 @@ export function AnnouncementBar() {
     return () => clearInterval(timer)
   }, [visible])
 
-  if (!visible) return null
+  if (!visible || announcements.length === 0) return null
 
   return (
     <div className="relative bg-primary text-primary-foreground">

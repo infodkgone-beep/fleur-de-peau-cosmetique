@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react"
 import { WhatsAppIcon } from "@/components/site-header"
-import { WHATSAPP_NUMBER, formatPrice, type Product } from "@/lib/products"
+import { WHATSAPP_NUMBER as DEFAULT_WHATSAPP_NUMBER, formatPrice, type Product } from "@/lib/products"
 
 type Errors = {
   prenom?: string
@@ -10,7 +10,15 @@ type Errors = {
   telephone?: string
 }
 
-export function OrderForm({ product, onSubmitted }: { product: Product; onSubmitted?: () => void }) {
+export function OrderForm({
+  product,
+  onSubmitted,
+  whatsappNumber = DEFAULT_WHATSAPP_NUMBER,
+}: {
+  product: Product
+  onSubmitted?: () => void
+  whatsappNumber?: string
+}) {
   const [prenom, setPrenom] = useState("")
   const [lieu, setLieu] = useState("")
   const [telephone, setTelephone] = useState("")
@@ -38,7 +46,7 @@ export function OrderForm({ product, onSubmitted }: { product: Product; onSubmit
       `📍 Lieu de livraison : ${lieu}\n` +
       `📞 Téléphone : ${telephone}`
 
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
+    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
     window.open(url, "_blank", "noopener,noreferrer")
     onSubmitted?.()
   }

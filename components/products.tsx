@@ -1,11 +1,32 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { X } from "lucide-react"
 import { OrderForm } from "@/components/order-form"
-import { products, formatPrice, discountPercent, type Product } from "@/lib/products"
+import { formatPrice, type Product } from "@/lib/products"
+import type { StorefrontProduct } from "@/lib/storefront"
 
-export function Products() {
+/** Pourcentage de réduction arrondi, ou null si le produit n'est pas en promo. */
+function discountPercent(price: number, oldPrice: number | null): number | null {
+  if (!oldPrice || oldPrice <= price) return null
+  return Math.round((1 - price / oldPrice) * 100)
+}
+
+function toOrderFormProduct(p: StorefrontProduct): Product {
+  return {
+    id: p.id,
+    name: p.name,
+    brand: p.brand ?? "Fleur de peau",
+    price: p.price,
+    oldPrice: p.oldPrice ?? undefined,
+    image: p.image,
+    imported: p.imported,
+    category: p.category ?? "",
+  }
+}
+
+export function Products({ products, whatsappNumber }: { products: StorefrontProduct[]; whatsappNumber?: string }) {
   const [selected, setSelected] = useState<Product | null>(null)
 
   useEffect(() => {
@@ -46,7 +67,7 @@ export function Products() {
               key={product.id}
               className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
             >
-              <div className="relative aspect-square overflow-hidden bg-secondary/50">
+              <Link href={`/produit/${product.slug}`} className="relative block aspect-square overflow-hidden bg-secondary/50">
                 <img
                   src={product.image || "/placeholder.svg"}
                   alt={product.name}
@@ -57,19 +78,26 @@ export function Products() {
                     Importé
                   </span>
                 )}
-                {discountPercent(product) !== null && (
+                {discountPercent(product.price, product.oldPrice) !== null && (
                   <span className="absolute right-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-primary-foreground shadow">
-                    -{discountPercent(product)}%
+                    -{discountPercent(product.price, product.oldPrice)}%
                   </span>
                 )}
-              </div>
+                {!product.inStock && (
+                  <span className="absolute inset-x-3 bottom-3 rounded-full bg-foreground/80 px-2.5 py-1 text-center text-[0.65rem] font-bold uppercase tracking-wide text-background shadow">
+                    Rupture de stock
+                  </span>
+                )}
+              </Link>
               <div className="flex flex-1 flex-col p-4">
                 <p className="text-[0.7rem] font-medium uppercase tracking-wider text-muted-foreground">
-                  {product.brand}
+                  {product.brand ?? "Fleur de peau"}
                 </p>
-                <h3 className="mt-1 font-serif text-base font-semibold leading-snug text-foreground">
-                  {product.name}
-                </h3>
+                <Link href={`/produit/${product.slug}`}>
+                  <h3 className="mt-1 font-serif text-base font-semibold leading-snug text-foreground hover:text-primary">
+                    {product.name}
+                  </h3>
+                </Link>
                 <div className="mt-2 flex flex-wrap items-baseline gap-x-2">
                   <p className="text-lg font-bold text-primary">{formatPrice(product.price)}</p>
                   {product.oldPrice && (
@@ -80,14 +108,20 @@ export function Products() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setSelected(product)}
-                  className="mt-4 w-full rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.03]"
+                  disabled={!product.inStock}
+                  onClick={() => setSelected(toOrderFormProduct(product))}
+                  className="mt-4 w-full rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.03] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                 >
-                  Commander
+                  {product.inStock ? "Commander" : "Indisponible"}
                 </button>
               </div>
             </article>
           ))}
+          {products.length === 0 && (
+            <p className="col-span-full text-center text-muted-foreground">
+              Aucun produit disponible pour l&apos;instant. Revenez bientôt !
+            </p>
+          )}
         </div>
       </div>
 
@@ -117,7 +151,7 @@ export function Products() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <OrderForm product={selected} onSubmitted={() => setSelected(null)} />
+            <OrderForm product={selected} onSubmitted={() => setSelected(null)} whatsappNumber={whatsappNumber} />
           </div>
         </div>
       )}

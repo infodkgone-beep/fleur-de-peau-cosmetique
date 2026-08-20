@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import { Playfair_Display, Inter } from 'next/font/google'
 import { MarketingPixels } from '@/components/marketing-pixels'
 import { VisitTracker } from '@/components/visit-tracker'
+import { CartProvider } from '@/lib/cart-context'
 import './globals.css'
 
 const playfair = Playfair_Display({
@@ -86,7 +87,7 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${playfair.variable} ${inter.variable} bg-background`}>
       <body className="font-sans antialiased">
-        {children}
+        <CartProvider>{children}</CartProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
         {process.env.NODE_ENV === 'production' && <MarketingPixels />}
         {process.env.NODE_ENV === 'production' && <VisitTracker />}

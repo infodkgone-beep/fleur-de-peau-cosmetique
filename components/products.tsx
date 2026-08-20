@@ -1,10 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import Link from "next/link"
-import { X } from "lucide-react"
-import { OrderForm } from "@/components/order-form"
-import { formatPrice, type Product } from "@/lib/products"
+import { AddToCartButton } from "@/components/add-to-cart-button"
+import { formatPrice } from "@/lib/products"
 import type { StorefrontProduct } from "@/lib/storefront"
 
 /** Pourcentage de réduction arrondi, ou null si le produit n'est pas en promo. */
@@ -13,41 +11,7 @@ function discountPercent(price: number, oldPrice: number | null): number | null 
   return Math.round((1 - price / oldPrice) * 100)
 }
 
-function toOrderFormProduct(p: StorefrontProduct): Product {
-  return {
-    id: p.id,
-    name: p.name,
-    brand: p.brand ?? "Fleur de peau",
-    price: p.price,
-    oldPrice: p.oldPrice ?? undefined,
-    image: p.image,
-    imported: p.imported,
-    category: p.category ?? "",
-  }
-}
-
-export function Products({ products, whatsappNumber }: { products: StorefrontProduct[]; whatsappNumber?: string }) {
-  const [selected, setSelected] = useState<Product | null>(null)
-
-  useEffect(() => {
-    if (selected) {
-      document.body.style.overflow = "hidden"
-    } else {
-      document.body.style.overflow = ""
-    }
-    return () => {
-      document.body.style.overflow = ""
-    }
-  }, [selected])
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setSelected(null)
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [])
-
+export function Products({ products }: { products: StorefrontProduct[]; whatsappNumber?: string }) {
   return (
     <section id="boutique" className="bg-secondary/40 py-14 md:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -106,14 +70,18 @@ export function Products({ products, whatsappNumber }: { products: StorefrontPro
                     </p>
                   )}
                 </div>
-                <button
-                  type="button"
+                <AddToCartButton
+                  product={{
+                    id: product.id,
+                    slug: product.slug,
+                    name: product.name,
+                    brand: product.brand,
+                    price: product.price,
+                    image: product.image,
+                  }}
                   disabled={!product.inStock}
-                  onClick={() => setSelected(toOrderFormProduct(product))}
-                  className="mt-4 w-full rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.03] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
-                >
-                  {product.inStock ? "Commander" : "Indisponible"}
-                </button>
+                  className="mt-4"
+                />
               </div>
             </article>
           ))}
@@ -124,37 +92,6 @@ export function Products({ products, whatsappNumber }: { products: StorefrontPro
           )}
         </div>
       </div>
-
-      {selected && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Formulaire de commande"
-          onClick={() => setSelected(null)}
-        >
-          <div
-            className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-background p-6 shadow-2xl sm:rounded-3xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-start justify-between gap-4">
-              <div>
-                <h3 className="font-serif text-xl font-bold text-foreground">Passer commande</h3>
-                <p className="text-sm text-muted-foreground">Remplissez le formulaire ci-dessous.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelected(null)}
-                aria-label="Fermer"
-                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-secondary"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <OrderForm product={selected} onSubmitted={() => setSelected(null)} whatsappNumber={whatsappNumber} />
-          </div>
-        </div>
-      )}
     </section>
   )
 }

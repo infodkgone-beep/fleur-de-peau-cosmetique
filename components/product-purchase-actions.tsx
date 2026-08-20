@@ -3,15 +3,20 @@
 import { useState } from "react"
 import { X } from "lucide-react"
 import { OrderForm } from "@/components/order-form"
+import { AddToCartButton } from "@/components/add-to-cart-button"
 import { WhatsAppIcon } from "@/components/site-header"
 import { WHATSAPP_NUMBER as DEFAULT_WHATSAPP_NUMBER, formatPrice, type Product } from "@/lib/products"
 
 export function ProductPurchaseActions({
   product,
+  slug,
+  image,
   inStock,
   whatsappNumber = DEFAULT_WHATSAPP_NUMBER,
 }: {
   product: Product
+  slug: string
+  image: string
   inStock: boolean
   whatsappNumber?: string
 }) {
@@ -27,24 +32,37 @@ export function ProductPurchaseActions({
 
   return (
     <>
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <button
-          type="button"
+      <div className="flex flex-col gap-3">
+        <AddToCartButton
+          product={{
+            id: product.id,
+            slug,
+            name: product.name,
+            brand: product.brand,
+            price: product.price,
+            image,
+          }}
           disabled={!inStock}
-          onClick={() => setOpen(true)}
-          className="flex-1 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-transform hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
-        >
-          {inStock ? "Commander maintenant" : "Rupture de stock"}
-        </button>
-        <button
-          type="button"
-          disabled={!inStock}
-          onClick={quickWhatsApp}
-          className="flex flex-1 items-center justify-center gap-2 rounded-full border border-primary/40 bg-card px-6 py-3.5 text-sm font-semibold text-primary transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <WhatsAppIcon className="h-4 w-4" />
-          Écrire sur WhatsApp
-        </button>
+        />
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            disabled={!inStock}
+            onClick={() => setOpen(true)}
+            className="flex-1 rounded-full border border-primary/40 bg-card px-6 py-3.5 text-sm font-semibold text-primary transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {inStock ? "Commander maintenant" : "Rupture de stock"}
+          </button>
+          <button
+            type="button"
+            disabled={!inStock}
+            onClick={quickWhatsApp}
+            className="flex flex-1 items-center justify-center gap-2 rounded-full border border-primary/40 bg-card px-6 py-3.5 text-sm font-semibold text-primary transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <WhatsAppIcon className="h-4 w-4" />
+            Écrire sur WhatsApp
+          </button>
+        </div>
       </div>
 
       {open && (

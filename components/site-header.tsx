@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { Menu, ShoppingBag, X } from "lucide-react"
+import { Menu, X } from "lucide-react"
 import { WHATSAPP_NUMBER } from "@/lib/products"
+import { CartButton } from "@/components/cart-button"
 
 const navLinks = [
   { label: "Accueil", href: "#accueil" },
@@ -48,13 +49,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <a
-            href="#boutique"
-            aria-label="Voir le panier"
-            className="flex h-10 w-10 items-center justify-center rounded-full text-foreground/80 transition-colors hover:bg-secondary hover:text-primary"
-          >
-            <ShoppingBag className="h-5 w-5" />
-          </a>
+          <CartButton />
           <a
             href={`https://wa.me/${WHATSAPP_NUMBER}`}
             target="_blank"

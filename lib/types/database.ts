@@ -308,6 +308,29 @@ export type ProductMarginRow = {
   margin_percent: number
 }
 
+export type SiteVisitRow = {
+  id: string
+  visitor_id: string
+  path: string
+  created_at: string
+}
+
+export type VisitorStatsRow = {
+  today_visitors: number
+  today_views: number
+  week_visitors: number
+  week_views: number
+  month_visitors: number
+  month_views: number
+  year_visitors: number
+  year_views: number
+}
+
+export type DailyVisitorCountRow = {
+  day: string
+  unique_visitors: number
+}
+
 // Métadonnées de clés étrangères, nécessaires à postgrest-js pour typer les `select()` avec
 // jointures imbriquées (ex: `products(name)`). Reflète les `references ...` de la migration SQL —
 // si le schéma change, ces relations doivent être mises à jour en conséquence.
@@ -409,6 +432,7 @@ export interface Database {
       banners: TableDef<BannerRow, BannersRelationships>
       site_settings: TableDef<SiteSettingRow, SiteSettingsRelationships>
       activity_log: TableDef<ActivityLogRow, ActivityLogRelationships>
+      site_visits: TableDef<SiteVisitRow>
     }
     Views: {
       product_margins: { Row: ProductMarginRow; Relationships: [] }
@@ -427,6 +451,14 @@ export interface Database {
           p_created_by: string | null
         }
         Returns: undefined
+      }
+      get_visitor_stats: {
+        Args: Record<string, never>
+        Returns: VisitorStatsRow[]
+      }
+      get_daily_visitor_counts: {
+        Args: { p_days: number }
+        Returns: DailyVisitorCountRow[]
       }
     }
     Enums: {

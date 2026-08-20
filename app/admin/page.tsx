@@ -2,7 +2,9 @@ import { requireRole } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
 import { formatPrice } from "@/lib/products"
 import { SalesChart } from "@/components/admin/sales-chart"
-import { TrendingUp, ShoppingCart, Package, AlertTriangle, Users, Wallet } from "lucide-react"
+import { VisitorsChart } from "@/components/admin/visitors-chart"
+import { getVisitorStats, getDailyVisitorCounts } from "@/lib/actions/analytics"
+import { TrendingUp, ShoppingCart, Package, AlertTriangle, Users, Wallet, Eye } from "lucide-react"
 
 function startOfDay(d: Date) {
   const x = new Date(d)
@@ -34,17 +36,31 @@ export default async function AdminDashboardPage() {
     )
   }
 
-  const [ordersRes, productsRes, customersThisMonthRes, last30DaysRes, topProductsRes] = await Promise.all([
-    supabase.from("orders").select("id, total, created_at, status").neq("status", "annulee"),
-    supabase.from("products").select("id, name, stock_quantity, low_stock_threshold"),
-    supabase.from("customers").select("id", { count: "exact", head: true }).gte("created_at", startOfMonth(now).toISOString()),
-    supabase
-      .from("orders")
-      .select("total, created_at")
-      .neq("status", "annulee")
-      .gte("created_at", new Date(now.getTime() - 29 * 86400000).toISOString()),
-    supabase.from("order_items").select("product_name_snapshot, quantity"),
-  ])
+  const [ordersRes, productsRes, customersThisMonthRes, last30DaysRes, topProductsRes, visitorStats, dailyVisitors] =
+    await Promise.all([
+      supabase.from("orders").select("id, total, created_at, status").neq("status", "annulee"),
+      supabase.from("products").select("id, name, stock_quantity, low_stock_threshold"),
+      supabase.from("customers").select("id", { count: "exact", head: true }).gte("created_at", startOfMonth(now).toISOString()),
+      supabase
+        .from("orders")
+        .select("total, created_at")
+        .neq("status", "annulee")
+        .gte("created_at", new Date(now.getTime() - 29 * 86400000).toISOString()),
+      supabase.from("order_items").select("product_name_snapshot, quantity"),
+      // La migration 0002 (site_visits) doit être appliquée pour que ces deux appels fonctionnent —
+      // on dégrade en douceur vers des zéros tant que ce n'est pas fait, plutôt que de casser le tableau de bord.
+      getVisitorStats().catch(() => ({
+        todayVisitors: 0,
+        todayViews: 0,
+        weekVisitors: 0,
+        weekViews: 0,
+        monthVisitors: 0,
+        monthViews: 0,
+        yearVisitors: 0,
+        yearViews: 0,
+      })),
+      getDailyVisitorCounts(30).catch(() => [] as { day: string; uniqueVisitors: number }[]),
+    ])
 
   const orders = ordersRes.data ?? []
   const products = productsRes.data ?? []
@@ -79,6 +95,11 @@ export default async function AdminDashboardPage() {
 
   const produitsVendus = (topProductsRes.data ?? []).reduce((s, i) => s + i.quantity, 0)
 
+  const visitorsChartData = dailyVisitors.map((row) => ({
+    date: new Date(row.day).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }),
+    visitors: row.uniqueVisitors,
+  }))
+
   return (
     <div>
       <h1 className="font-serif text-2xl font-bold text-foreground">Tableau de bord</h1>
@@ -94,6 +115,15 @@ export default async function AdminDashboardPage() {
         <KpiCard icon={AlertTriangle} label="Ruptures de stock" value={String(ruptureStock)} alert={ruptureStock > 0} />
         <KpiCard icon={AlertTriangle} label="Stock bas" value={String(presqueRupture)} alert={presqueRupture > 0} />
         <KpiCard icon={Users} label="Nouveaux clients (mois)" value={String(customersThisMonthRes.count ?? 0)} />
+      </div>
+
+      <h2 className="mt-8 font-serif text-lg font-semibold text-foreground">Fréquentation du site</h2>
+      <p className="text-sm text-muted-foreground">Visiteurs uniques (basé sur un cookie anonyme, sans donnée personnelle)</p>
+      <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <KpiCard icon={Eye} label="Aujourd'hui" value={String(visitorStats.todayVisitors)} />
+        <KpiCard icon={Eye} label="Cette semaine" value={String(visitorStats.weekVisitors)} />
+        <KpiCard icon={Eye} label="Ce mois" value={String(visitorStats.monthVisitors)} />
+        <KpiCard icon={Eye} label="Cette année" value={String(visitorStats.yearVisitors)} />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
@@ -120,6 +150,13 @@ export default async function AdminDashboardPage() {
             ))}
             {topProducts.length === 0 && <p className="text-sm text-muted-foreground">Aucune vente enregistrée.</p>}
           </ol>
+        </div>
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-border bg-card p-5">
+        <h2 className="font-serif text-lg font-semibold">Visiteurs uniques (30 jours)</h2>
+        <div className="mt-4">
+          <VisitorsChart data={visitorsChartData} />
         </div>
       </div>
     </div>

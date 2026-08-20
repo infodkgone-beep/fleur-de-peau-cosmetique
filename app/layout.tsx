@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Playfair_Display, Inter } from 'next/font/google'
 import { MarketingPixels } from '@/components/marketing-pixels'
+import { VisitTracker } from '@/components/visit-tracker'
 import './globals.css'
 
 const playfair = Playfair_Display({
@@ -88,6 +89,7 @@ export default function RootLayout({
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
         {process.env.NODE_ENV === 'production' && <MarketingPixels />}
+        {process.env.NODE_ENV === 'production' && <VisitTracker />}
       </body>
     </html>
   )

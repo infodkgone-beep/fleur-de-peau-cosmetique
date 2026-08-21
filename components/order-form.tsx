@@ -6,6 +6,8 @@ import { WhatsAppIcon } from "@/components/site-header"
 import { WHATSAPP_NUMBER as DEFAULT_WHATSAPP_NUMBER, formatPrice, type Product } from "@/lib/products"
 import { isMobileOrTabletDevice } from "@/lib/device"
 import { createPublicOrder } from "@/lib/actions/public-orders"
+import { paymentMethodLabel, type PaymentMethodChoice } from "@/lib/payment"
+import { PaymentMethodField } from "@/components/cart-page-client"
 
 type Errors = {
   prenom?: string
@@ -25,6 +27,7 @@ export function OrderForm({
   const [prenom, setPrenom] = useState("")
   const [lieu, setLieu] = useState("")
   const [telephone, setTelephone] = useState("")
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodChoice>("livraison")
   const [errors, setErrors] = useState<Errors>({})
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -58,7 +61,8 @@ export function OrderForm({
         priceLine +
         `\n👤 Prénom : ${prenom}\n` +
         `📍 Lieu de livraison : ${lieu}\n` +
-        `📞 Téléphone : ${telephone}`
+        `📞 Téléphone : ${telephone}\n` +
+        `💳 Paiement : ${paymentMethodLabel(paymentMethod)}`
 
       // On ouvre WhatsApp tout de suite (de façon synchrone, dans la foulée du clic) pour que
       // le navigateur mobile n'assimile pas ça à une pop-up bloquée.
@@ -73,6 +77,7 @@ export function OrderForm({
         customer_phone: telephone,
         delivery_address: lieu,
         items: [{ product_id: product.id, quantity: 1, unit_price: product.price }],
+        payment_method: paymentMethod,
       }).catch(() => {})
 
       onSubmitted?.()
@@ -86,6 +91,7 @@ export function OrderForm({
       customer_phone: telephone,
       delivery_address: lieu,
       items: [{ product_id: product.id, quantity: 1, unit_price: product.price }],
+      payment_method: paymentMethod,
     })
     setSubmitting(false)
 
@@ -165,6 +171,7 @@ export function OrderForm({
         onChange={setTelephone}
         error={errors.telephone}
       />
+      <PaymentMethodField value={paymentMethod} onChange={setPaymentMethod} />
 
       {submitError && (
         <p className="rounded-xl bg-destructive/10 px-3 py-2 text-center text-xs font-medium text-destructive">

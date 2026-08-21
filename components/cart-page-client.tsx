@@ -8,6 +8,7 @@ import { formatPrice, WHATSAPP_NUMBER as DEFAULT_WHATSAPP_NUMBER } from "@/lib/p
 import { WhatsAppIcon } from "@/components/site-header"
 import { isMobileOrTabletDevice } from "@/lib/device"
 import { createPublicOrder } from "@/lib/actions/public-orders"
+import { PAYMENT_METHOD_OPTIONS, paymentMethodLabel, type PaymentMethodChoice } from "@/lib/payment"
 
 type Errors = {
   prenom?: string
@@ -26,6 +27,7 @@ export function CartPageClient({
   const [prenom, setPrenom] = useState("")
   const [lieu, setLieu] = useState("")
   const [telephone, setTelephone] = useState("")
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodChoice>("livraison")
   const [errors, setErrors] = useState<Errors>({})
   const [sentVia, setSentVia] = useState<"whatsapp" | "site" | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -63,7 +65,8 @@ export function CartPageClient({
         `💰 Total : ${formatPrice(totalPrice)}\n\n` +
         `👤 Prénom : ${prenom}\n` +
         `📍 Lieu de livraison : ${lieu}\n` +
-        `📞 Téléphone : ${telephone}`
+        `📞 Téléphone : ${telephone}\n` +
+        `💳 Paiement : ${paymentMethodLabel(paymentMethod)}`
 
       // On ouvre WhatsApp tout de suite (de façon synchrone, dans la foulée du clic) pour que
       // le navigateur mobile n'assimile pas ça à une pop-up bloquée.
@@ -78,6 +81,7 @@ export function CartPageClient({
         customer_phone: telephone,
         delivery_address: lieu,
         items: items.map((item) => ({ product_id: item.id, quantity: item.quantity, unit_price: item.price })),
+        payment_method: paymentMethod,
       }).catch(() => {})
 
       setSentVia("whatsapp")
@@ -92,6 +96,7 @@ export function CartPageClient({
       customer_phone: telephone,
       delivery_address: lieu,
       items: items.map((item) => ({ product_id: item.id, quantity: item.quantity, unit_price: item.price })),
+      payment_method: paymentMethod,
     })
     setSubmitting(false)
 
@@ -248,6 +253,7 @@ export function CartPageClient({
             onChange={setTelephone}
             error={errors.telephone}
           />
+          <PaymentMethodField value={paymentMethod} onChange={setPaymentMethod} />
           {submitError && (
             <p className="rounded-xl bg-destructive/10 px-3 py-2 text-center text-xs font-medium text-destructive">
               {submitError}
@@ -306,6 +312,45 @@ function Field({
         }`}
       />
       {error && <p className="text-xs font-medium text-destructive">{error}</p>}
+    </div>
+  )
+}
+
+export function PaymentMethodField({
+  value,
+  onChange,
+}: {
+  value: PaymentMethodChoice
+  onChange: (v: PaymentMethodChoice) => void
+}) {
+  const selected = PAYMENT_METHOD_OPTIONS.find((o) => o.value === value)
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-sm font-medium text-foreground">
+        Mode de paiement <span className="text-primary">*</span>
+      </label>
+      <div className="flex flex-wrap gap-2">
+        {PAYMENT_METHOD_OPTIONS.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => onChange(option.value)}
+            className={`rounded-full border px-4 py-2 text-xs font-semibold transition-colors ${
+              value === option.value
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-background text-foreground/80 hover:border-primary/50"
+            }`}
+          >
+            {option.shortLabel}
+          </button>
+        ))}
+      </div>
+      {(value === "wave" || value === "orange_money") && (
+        <p className="rounded-xl bg-secondary/60 px-3 py-2 text-xs text-muted-foreground">
+          Envoyez le montant de votre commande au <strong className="text-foreground">{selected?.label.match(/\+225[\d\s]+/)?.[0]}</strong>{" "}
+          ({selected?.shortLabel}), nous confirmerons la réception avant l&apos;expédition.
+        </p>
+      )}
     </div>
   )
 }

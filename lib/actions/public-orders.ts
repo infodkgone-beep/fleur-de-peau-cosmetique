@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { notifyAdminNewOrderWhatsApp } from "@/lib/whatsapp-cloud"
 import { formatPrice } from "@/lib/products"
+import { paymentMethodLabel } from "@/lib/payment"
 
 /**
  * Commande passée directement par un client depuis le site public. Sur PC / TV, c'est l'unique
@@ -28,6 +29,7 @@ const createPublicOrderSchema = z.object({
   customer_phone: z.string().min(6, "Le numéro de téléphone est obligatoire."),
   delivery_address: z.string().min(2, "Le lieu de livraison est obligatoire."),
   items: z.array(publicOrderItemSchema).min(1),
+  payment_method: z.enum(["livraison", "wave", "orange_money"]).default("livraison"),
 })
 
 export type CreatePublicOrderInput = z.infer<typeof createPublicOrderSchema>
@@ -86,7 +88,7 @@ export async function createPublicOrder(input: CreatePublicOrderInput): Promise<
         subtotal,
         total: subtotal,
         delivery_address: data.delivery_address,
-        notes: "Commande passée directement depuis le site.",
+        notes: `Commande passée directement depuis le site. Mode de paiement souhaité : ${paymentMethodLabel(data.payment_method)}.`,
       })
       .select("id, order_number")
       .single()

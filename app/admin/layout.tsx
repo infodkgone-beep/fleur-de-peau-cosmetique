@@ -13,6 +13,7 @@ import {
   Image as ImageIcon,
   Users,
   Tag,
+  Smartphone,
 } from "lucide-react"
 
 const NAV = [
@@ -22,6 +23,7 @@ const NAV = [
   { href: "/admin/stock", label: "Stock & Achats", icon: Boxes, roles: ["super_admin", "admin_commercial"] },
   { href: "/admin/comptabilite", label: "Comptabilité", icon: Wallet, roles: ["super_admin"] },
   { href: "/admin/promotions", label: "Codes promo", icon: Tag, roles: ["super_admin", "admin_commercial"] },
+  { href: "/admin/appareils", label: "Appareils installés", icon: Smartphone, roles: ["super_admin", "admin_commercial"] },
   { href: "/admin/contenu", label: "Contenu du site", icon: ImageIcon, roles: ["super_admin", "content_manager"] },
   { href: "/admin/marketing", label: "Pixels marketing", icon: Megaphone, roles: ["super_admin"] },
   { href: "/admin/utilisateurs", label: "Utilisateurs", icon: Users, roles: ["super_admin"] },

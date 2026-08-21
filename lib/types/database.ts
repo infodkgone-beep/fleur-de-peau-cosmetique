@@ -331,6 +331,25 @@ export type DailyVisitorCountRow = {
   unique_visitors: number
 }
 
+export type PwaInstallRow = {
+  id: string
+  device_id: string
+  platform: string
+  user_agent: string | null
+  installed_at: string
+  last_seen_at: string
+}
+
+export type PwaInstallStatsRow = {
+  total_installs: number
+  active_3d: number
+  inactive_30d: number
+  android_count: number
+  ios_count: number
+  desktop_count: number
+  autre_count: number
+}
+
 // Métadonnées de clés étrangères, nécessaires à postgrest-js pour typer les `select()` avec
 // jointures imbriquées (ex: `products(name)`). Reflète les `references ...` de la migration SQL —
 // si le schéma change, ces relations doivent être mises à jour en conséquence.
@@ -433,6 +452,7 @@ export interface Database {
       site_settings: TableDef<SiteSettingRow, SiteSettingsRelationships>
       activity_log: TableDef<ActivityLogRow, ActivityLogRelationships>
       site_visits: TableDef<SiteVisitRow>
+      pwa_installs: TableDef<PwaInstallRow>
     }
     Views: {
       product_margins: { Row: ProductMarginRow; Relationships: [] }
@@ -459,6 +479,10 @@ export interface Database {
       get_daily_visitor_counts: {
         Args: { p_days: number }
         Returns: DailyVisitorCountRow[]
+      }
+      get_pwa_install_stats: {
+        Args: Record<string, never>
+        Returns: PwaInstallStatsRow[]
       }
     }
     Enums: {

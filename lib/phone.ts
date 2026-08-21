@@ -5,6 +5,5 @@
 export function toWhatsAppNumber(raw: string): string {
   const digits = raw.replace(/[^\d]/g, "")
   if (digits.startsWith("225")) return digits
-  if (digits.startsWith("0")) return `225${digits.slice(1)}`
   return `225${digits}`
 }

@@ -85,14 +85,18 @@ export function SiteFooter() {
           <h3 className="font-serif text-base font-semibold text-foreground">Suivez-nous</h3>
           <div className="mt-4 flex gap-3">
             <a
-              href="#"
+              href="https://www.facebook.com/share/1EQPCpk4TM/?mibextid=wwXIfr"
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="Facebook Fleur de peau"
               className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
             >
               <FacebookIcon className="h-5 w-5" />
             </a>
             <a
-              href="#"
+              href="https://www.tiktok.com/@fleurdepeau08?_r=1&_t=ZS-994OQkVU1ki"
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="TikTok Fleur de peau"
               className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
             >

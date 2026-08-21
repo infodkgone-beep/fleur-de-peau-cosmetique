@@ -67,13 +67,35 @@ export async function createPublicOrder(input: CreatePublicOrderInput): Promise<
       customerId = newCustomer.id
     }
 
-    // 2. Snapshot produits (nom + coût actuel) pour la commande
+    // 2. Snapshot produits (nom, coût actuel, stock actuel) pour la commande
     const productIds = [...new Set(data.items.map((i) => i.product_id))]
     const { data: productsData } = await supabase
       .from("products")
-      .select("id, name, cost_price")
+      .select("id, name, cost_price, stock_quantity")
       .in("id", productIds)
     const productMap = new Map((productsData ?? []).map((p) => [p.id, p]))
+
+    // 2bis. Vérifie AVANT toute écriture que le stock disponible couvre bien la commande —
+    // évite de créer une commande "fantôme" en base (sans stock réservé) si le client a demandé
+    // plus que ce qu'il reste. On agrège d'abord par produit, au cas où le panier contiendrait
+    // plusieurs lignes du même article.
+    const requestedByProduct = new Map<string, number>()
+    for (const item of data.items) {
+      requestedByProduct.set(item.product_id, (requestedByProduct.get(item.product_id) ?? 0) + item.quantity)
+    }
+    for (const [productId, requestedQty] of requestedByProduct) {
+      const product = productMap.get(productId)
+      const available = product?.stock_quantity ?? 0
+      if (requestedQty > available) {
+        return {
+          ok: false,
+          error:
+            available > 0
+              ? `Il ne reste que ${available} en stock pour "${product?.name ?? "cet article"}" (vous en demandez ${requestedQty}). Merci d'ajuster la quantité.`
+              : `"${product?.name ?? "Cet article"}" n'est plus disponible en stock. Merci de retirer cet article de votre commande.`,
+        }
+      }
+    }
 
     const subtotal = data.items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0)
 

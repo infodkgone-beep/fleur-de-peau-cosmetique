@@ -88,25 +88,33 @@ function ProductCard({ product }: { product: StorefrontProduct }) {
         </div>
 
         {product.inStock && (
-          <div className="mt-3 flex items-center justify-between rounded-full border border-border bg-background px-1 py-1">
-            <button
-              type="button"
-              aria-label="Diminuer la quantité"
-              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              className="flex h-7 w-7 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-secondary hover:text-primary"
-            >
-              <Minus className="h-3 w-3" />
-            </button>
-            <span className="text-xs font-semibold text-foreground">{quantity}</span>
-            <button
-              type="button"
-              aria-label="Augmenter la quantité"
-              onClick={() => setQuantity((q) => Math.min(50, q + 1))}
-              className="flex h-7 w-7 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-secondary hover:text-primary"
-            >
-              <Plus className="h-3 w-3" />
-            </button>
-          </div>
+          <>
+            <div className="mt-3 flex items-center justify-between rounded-full border border-border bg-background px-1 py-1">
+              <button
+                type="button"
+                aria-label="Diminuer la quantité"
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                className="flex h-7 w-7 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-secondary hover:text-primary"
+              >
+                <Minus className="h-3 w-3" />
+              </button>
+              <span className="text-xs font-semibold text-foreground">{quantity}</span>
+              <button
+                type="button"
+                aria-label="Augmenter la quantité"
+                disabled={quantity >= Math.min(50, product.stockQuantity)}
+                onClick={() => setQuantity((q) => Math.min(50, product.stockQuantity, q + 1))}
+                className="flex h-7 w-7 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-secondary hover:text-primary disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-foreground/70"
+              >
+                <Plus className="h-3 w-3" />
+              </button>
+            </div>
+            {product.stockQuantity <= 5 && (
+              <p className="mt-1 text-center text-[0.65rem] font-medium text-destructive">
+                Plus que {product.stockQuantity} en stock
+              </p>
+            )}
+          </>
         )}
 
         <AddToCartButton

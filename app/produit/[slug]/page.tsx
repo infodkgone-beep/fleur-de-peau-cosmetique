@@ -164,6 +164,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 slug={product.slug}
                 image={product.image}
                 inStock={product.inStock}
+                stockQuantity={product.stockQuantity}
                 whatsappNumber={settings.whatsappNumber}
               />
             </div>

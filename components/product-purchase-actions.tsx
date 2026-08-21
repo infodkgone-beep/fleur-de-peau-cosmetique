@@ -12,14 +12,17 @@ export function ProductPurchaseActions({
   slug,
   image,
   inStock,
+  stockQuantity,
   whatsappNumber = DEFAULT_WHATSAPP_NUMBER,
 }: {
   product: Product
   slug: string
   image: string
   inStock: boolean
+  stockQuantity: number
   whatsappNumber?: string
 }) {
+  const maxQuantity = Math.min(50, stockQuantity)
   const [open, setOpen] = useState(false)
   const [quantity, setQuantity] = useState(1)
 
@@ -51,13 +54,17 @@ export function ProductPurchaseActions({
             <button
               type="button"
               aria-label="Augmenter la quantité"
-              onClick={() => setQuantity((q) => Math.min(50, q + 1))}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-secondary hover:text-primary"
+              disabled={quantity >= maxQuantity}
+              onClick={() => setQuantity((q) => Math.min(maxQuantity, q + 1))}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-secondary hover:text-primary disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-foreground/70"
             >
               <Plus className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
+        {stockQuantity <= 5 && inStock && (
+          <p className="-mt-1 text-xs font-medium text-destructive">Plus que {stockQuantity} en stock</p>
+        )}
         <AddToCartButton
           product={{
             id: product.id,
@@ -123,6 +130,7 @@ export function ProductPurchaseActions({
               onSubmitted={() => setOpen(false)}
               whatsappNumber={whatsappNumber}
               initialQuantity={quantity}
+              maxQuantity={maxQuantity}
             />
           </div>
         </div>

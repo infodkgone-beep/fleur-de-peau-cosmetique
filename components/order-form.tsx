@@ -20,13 +20,15 @@ export function OrderForm({
   onSubmitted,
   whatsappNumber = DEFAULT_WHATSAPP_NUMBER,
   initialQuantity = 1,
+  maxQuantity = 50,
 }: {
   product: Product
   onSubmitted?: () => void
   whatsappNumber?: string
   initialQuantity?: number
+  maxQuantity?: number
 }) {
-  const [quantity, setQuantity] = useState(initialQuantity)
+  const [quantity, setQuantity] = useState(Math.min(initialQuantity, maxQuantity))
   const [prenom, setPrenom] = useState("")
   const [lieu, setLieu] = useState("")
   const [telephone, setTelephone] = useState("")
@@ -161,13 +163,17 @@ export function OrderForm({
           <button
             type="button"
             aria-label="Augmenter la quantité"
-            onClick={() => setQuantity((q) => Math.min(50, q + 1))}
-            className="flex h-8 w-8 items-center justify-center text-foreground/70 transition-colors hover:text-primary"
+            disabled={quantity >= maxQuantity}
+            onClick={() => setQuantity((q) => Math.min(maxQuantity, q + 1))}
+            className="flex h-8 w-8 items-center justify-center text-foreground/70 transition-colors hover:text-primary disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:text-foreground/70"
           >
             <Plus className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
+      {maxQuantity <= 5 && (
+        <p className="-mt-2 text-right text-xs font-medium text-destructive">Plus que {maxQuantity} en stock</p>
+      )}
       {quantity > 1 && (
         <p className="-mt-2 text-right text-xs text-muted-foreground">
           Total : <span className="font-semibold text-foreground">{formatPrice(product.price * quantity)}</span>

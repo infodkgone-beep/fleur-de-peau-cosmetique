@@ -25,6 +25,7 @@ export type StorefrontProduct = {
   categoryId: string | null
   categorySlug: string | null
   inStock: boolean
+  stockQuantity: number
 }
 
 export type StorefrontProductDetail = StorefrontProduct & {
@@ -74,6 +75,7 @@ export async function getActiveProducts(): Promise<StorefrontProduct[]> {
       categoryId: p.category_id,
       categorySlug: category?.slug ?? null,
       inStock: p.stock_quantity > 0,
+      stockQuantity: p.stock_quantity,
     }
   })
 }
@@ -123,6 +125,7 @@ export async function getProductBySlug(slug: string): Promise<StorefrontProductD
     categoryId: p.category_id,
     categorySlug: category?.slug ?? null,
     inStock: p.stock_quantity > 0,
+    stockQuantity: p.stock_quantity,
     shortDescription: p.short_description,
     longDescription: p.long_description,
     benefits: p.benefits,
@@ -177,6 +180,7 @@ export async function getSimilarProducts(categoryId: string | null, excludeId: s
       categoryId: p.category_id,
       categorySlug: category?.slug ?? null,
       inStock: p.stock_quantity > 0,
+      stockQuantity: p.stock_quantity,
     }
   })
 }

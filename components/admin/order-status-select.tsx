@@ -3,6 +3,8 @@
 import { useTransition } from "react"
 import { updateOrderStatus } from "@/lib/actions/orders"
 import type { OrderStatus } from "@/lib/types/database"
+import { toWhatsAppNumber } from "@/lib/phone"
+import { buildStatusUpdateMessage } from "@/lib/order-status-messages"
 
 const STATUS_OPTIONS: { value: OrderStatus; label: string }[] = [
   { value: "en_attente", label: "En attente" },
@@ -12,7 +14,17 @@ const STATUS_OPTIONS: { value: OrderStatus; label: string }[] = [
   { value: "annulee", label: "Annulée" },
 ]
 
-export function OrderStatusSelect({ orderId, status }: { orderId: string; status: OrderStatus }) {
+export function OrderStatusSelect({
+  orderId,
+  status,
+  orderNumber,
+  customerPhone,
+}: {
+  orderId: string
+  status: OrderStatus
+  orderNumber: string
+  customerPhone: string | null
+}) {
   const [isPending, startTransition] = useTransition()
 
   return (
@@ -25,6 +37,17 @@ export function OrderStatusSelect({ orderId, status }: { orderId: string; status
           e.target.value = status
           return
         }
+
+        // Ouvre un message WhatsApp pré-rempli pour prévenir le client — le staff n'a plus qu'à
+        // cliquer "Envoyer" dans WhatsApp. Il reste bien un contrôle humain avant l'envoi réel.
+        if (customerPhone) {
+          const message = buildStatusUpdateMessage(orderNumber, value)
+          if (message) {
+            const waNumber = toWhatsAppNumber(customerPhone)
+            window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer")
+          }
+        }
+
         startTransition(() => updateOrderStatus(orderId, value))
       }}
       className="rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium"

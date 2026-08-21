@@ -71,7 +71,7 @@ export function OrderRow({
         <td className="px-4 py-3 font-semibold">{formatPrice(total)}</td>
         <td className="px-4 py-3 capitalize">{paymentStatus.replace("_", " ")}</td>
         <td className="px-4 py-3">
-          <OrderStatusSelect orderId={id} status={status} />
+          <OrderStatusSelect orderId={id} status={status} orderNumber={orderNumber} customerPhone={customerPhone} />
         </td>
         <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(createdAt).toLocaleDateString("fr-FR")}</td>
       </tr>

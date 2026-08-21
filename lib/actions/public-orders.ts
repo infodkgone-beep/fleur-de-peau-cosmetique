@@ -3,6 +3,8 @@
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { notifyAdminNewOrderWhatsApp } from "@/lib/whatsapp-cloud"
+import { formatPrice } from "@/lib/products"
 
 /**
  * Commande passée directement par un client depuis le site public (PC / TV — sans passer par
@@ -138,6 +140,14 @@ export async function createPublicOrder(input: CreatePublicOrderInput): Promise<
     revalidatePath("/admin/commandes")
     revalidatePath("/admin/stock")
     revalidatePath("/admin")
+
+    // Notifie le gérant sur WhatsApp (n'a d'effet que si le compte WhatsApp Business API est
+    // configuré — voir lib/whatsapp-cloud.ts). Ne doit jamais faire échouer la commande.
+    notifyAdminNewOrderWhatsApp({
+      orderNumber: order.order_number,
+      customerName: data.customer_name,
+      total: formatPrice(subtotal),
+    }).catch(() => {})
 
     return { ok: true, orderId, orderNumber: order.order_number }
   } catch (err) {

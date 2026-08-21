@@ -38,12 +38,12 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="relative h-11 w-11 overflow-hidden rounded-full ring-1 ring-gold/50">
+            <span className="relative h-11 w-11 flex-shrink-0">
               <Image
                 src="/images/logo-fleur-de-peau.webp"
                 alt="Logo Fleur de peau Cosmétique"
                 fill
-                className="scale-[1.7] object-cover object-top"
+                className="object-contain"
               />
             </span>
             <span className="flex flex-col leading-none">
@@ -76,7 +76,7 @@ export function SiteFooter() {
             </li>
             <li className="flex items-center gap-2.5">
               <MapPin className="h-4 w-4 text-primary" />
-              Cocody, Abidjan
+              Djorobité 1, non loin du feu, Cité SIR
             </li>
           </ul>
         </div>

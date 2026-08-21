@@ -23,12 +23,12 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <Link href="/" className="flex items-center gap-2.5">
-          <span className="relative h-11 w-11 overflow-hidden rounded-full ring-1 ring-gold/50">
+          <span className="relative h-11 w-11 flex-shrink-0">
             <Image
               src="/images/logo-fleur-de-peau.webp"
               alt="Logo Fleur de peau Cosmétique"
               fill
-              className="scale-[1.7] object-cover object-top"
+              className="object-contain"
             />
           </span>
           <span className="flex flex-col leading-none">

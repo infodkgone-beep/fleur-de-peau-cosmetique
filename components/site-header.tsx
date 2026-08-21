@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Menu, X } from "lucide-react"
 import { WHATSAPP_NUMBER } from "@/lib/products"
 import { CartButton } from "@/components/cart-button"
+import { SiteSearch } from "@/components/site-search"
 
 const navLinks = [
   { label: "Accueil", href: "/#accueil" },
@@ -50,6 +51,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <SiteSearch />
           <CartButton />
           <a
             href={`https://wa.me/${WHATSAPP_NUMBER}`}

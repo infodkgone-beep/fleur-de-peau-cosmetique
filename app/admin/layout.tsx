@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import Link from "next/link"
 import { requireRole, ROLE_LABELS } from "@/lib/auth"
 import { AdminSignOutButton } from "@/components/admin/sign-out-button"
+import { MobileNav } from "@/components/admin/mobile-nav"
 import {
   LayoutDashboard,
   Package,
@@ -26,34 +27,53 @@ const NAV = [
   { href: "/admin/utilisateurs", label: "Utilisateurs", icon: Users, roles: ["super_admin"] },
 ] as const
 
+type NavItem = (typeof NAV)[number]
+
+function NavLinks({ items }: { items: NavItem[] }) {
+  return (
+    <nav className="flex-1 space-y-1 p-3">
+      {items.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-primary"
+        >
+          <item.icon className="h-4 w-4" />
+          {item.label}
+        </Link>
+      ))}
+    </nav>
+  )
+}
+
+function AccountBlock({ fullName, roleLabel }: { fullName: string; roleLabel: string }) {
+  return (
+    <div className="border-t border-border p-4">
+      <p className="truncate text-sm font-medium text-foreground">{fullName}</p>
+      <p className="text-xs text-muted-foreground">{roleLabel}</p>
+      <AdminSignOutButton />
+    </div>
+  )
+}
+
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const profile = await requireRole()
   const visibleNav = NAV.filter((item) => (item.roles as readonly string[]).includes(profile.role!))
 
   return (
-    <div className="flex min-h-screen bg-secondary/30">
+    <div className="flex min-h-screen flex-col bg-secondary/30 md:flex-row">
+      <MobileNav>
+        <NavLinks items={visibleNav} />
+        <AccountBlock fullName={profile.full_name} roleLabel={ROLE_LABELS[profile.role!]} />
+      </MobileNav>
+
       <aside className="hidden w-64 flex-shrink-0 flex-col border-r border-border bg-card md:flex">
         <div className="border-b border-border p-5">
           <p className="font-serif text-lg font-bold text-primary">Fleur de peau</p>
           <p className="text-xs text-muted-foreground">Administration</p>
         </div>
-        <nav className="flex-1 space-y-1 p-3">
-          {visibleNav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-primary"
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="border-t border-border p-4">
-          <p className="truncate text-sm font-medium text-foreground">{profile.full_name}</p>
-          <p className="text-xs text-muted-foreground">{ROLE_LABELS[profile.role!]}</p>
-          <AdminSignOutButton />
-        </div>
+        <NavLinks items={visibleNav} />
+        <AccountBlock fullName={profile.full_name} roleLabel={ROLE_LABELS[profile.role!]} />
       </aside>
 
       <main className="flex-1 overflow-x-hidden p-4 md:p-8">{children}</main>

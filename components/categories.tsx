@@ -1,4 +1,17 @@
-import { Sparkles, Flower2, Sun, Droplets, ShieldCheck, Leaf, type LucideIcon } from "lucide-react"
+import {
+  Sparkles,
+  Flower2,
+  Sun,
+  Droplets,
+  ShieldCheck,
+  Leaf,
+  ShowerHead,
+  SprayCan,
+  Smile,
+  Palette,
+  Scissors,
+  type LucideIcon,
+} from "lucide-react"
 
 const iconMap: Record<string, LucideIcon> = {
   Sparkles,
@@ -7,6 +20,11 @@ const iconMap: Record<string, LucideIcon> = {
   Droplets,
   ShieldCheck,
   Leaf,
+  ShowerHead,
+  SprayCan,
+  Smile,
+  Palette,
+  Scissors,
 }
 
 type Category = { name: string; description: string | null; icon: string | null }

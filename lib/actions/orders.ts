@@ -148,8 +148,18 @@ export async function updateOrderStatus(orderId: string, status: "en_attente" | 
   const profile = await requireRole(["super_admin", "admin_commercial"])
   const supabase = await createClient()
 
-  // Si annulation, on remet le stock (mouvement inverse historisé)
-  if (status === "annulee") {
+  // Statut actuel, pour ne réagir qu'aux vraies transitions (annulation / réactivation)
+  const { data: currentOrder } = await supabase
+    .from("orders")
+    .select("status, channel")
+    .eq("id", orderId)
+    .single()
+  const previousStatus = currentOrder?.status
+  const channel = currentOrder?.channel ?? null
+
+  // Annulation : on remet le stock (mouvement inverse historisé), uniquement si la commande
+  // n'était pas déjà annulée (sinon on créditerait le stock plusieurs fois pour la même commande)
+  if (status === "annulee" && previousStatus !== "annulee") {
     const { data: items } = await supabase.from("order_items").select("product_id, variant_id, quantity").eq("order_id", orderId)
     for (const item of items ?? []) {
       await supabase.rpc("apply_stock_movement", {
@@ -163,6 +173,26 @@ export async function updateOrderStatus(orderId: string, status: "en_attente" | 
         p_reason: "Annulation de commande",
         p_created_by: profile.id,
       })
+    }
+  }
+
+  // Réactivation : si une commande annulée repasse à un statut actif, il faut redéduire le
+  // stock (il avait été restitué lors de l'annulation), sinon le stock affiché reste faux.
+  if (previousStatus === "annulee" && status !== "annulee") {
+    const { data: items } = await supabase.from("order_items").select("product_id, variant_id, quantity").eq("order_id", orderId)
+    for (const item of items ?? []) {
+      const { error: stockError } = await supabase.rpc("apply_stock_movement", {
+        p_product_id: item.product_id,
+        p_variant_id: item.variant_id,
+        p_quantity: -item.quantity,
+        p_movement_type: "vente",
+        p_channel: channel,
+        p_reference_order_id: orderId,
+        p_reference_purchase_id: null,
+        p_reason: "Réactivation d'une commande annulée",
+        p_created_by: profile.id,
+      })
+      if (stockError) throw new Error(`Stock insuffisant pour réactiver cette commande : ${stockError.message}`)
     }
   }
 

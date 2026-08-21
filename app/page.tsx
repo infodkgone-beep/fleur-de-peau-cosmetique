@@ -2,7 +2,6 @@ import { AnnouncementBar } from "@/components/announcement-bar"
 import { SiteHeader } from "@/components/site-header"
 import { Hero } from "@/components/hero"
 import { BannerCarousel } from "@/components/banner-carousel"
-import { Categories } from "@/components/categories"
 import { CategoryRail } from "@/components/category-rail"
 import { Promotions } from "@/components/promotions"
 import { Products } from "@/components/products"
@@ -28,9 +27,6 @@ export default async function Page() {
       <CategoryRail categories={categories} />
       <Hero />
       <BannerCarousel />
-      <div className="lg:hidden">
-        <Categories categories={categories} />
-      </div>
       <Promotions whatsappNumber={settings.whatsappNumber} />
       <Products products={products} whatsappNumber={settings.whatsappNumber} />
       <TrustBanner />

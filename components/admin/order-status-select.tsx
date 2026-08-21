@@ -33,9 +33,20 @@ export function OrderStatusSelect({
       disabled={isPending}
       onChange={(e) => {
         const value = e.target.value as OrderStatus
-        if (value === "annulee" && !confirm("Annuler cette commande ? Le stock sera automatiquement remis.")) {
-          e.target.value = status
-          return
+        let cancelReason: string | null = null
+
+        if (value === "annulee") {
+          // Motif obligatoire : trace qui a annulé, quand, et pourquoi — pour repérer tout
+          // abus (ex : annuler une commande déjà livrée/payée pour la faire disparaître).
+          const input = prompt(
+            "Pourquoi annuler cette commande ? (obligatoire — ex : \"produit défectueux\", \"client insatisfait\")"
+          )
+          const trimmed = input?.trim()
+          if (!trimmed) {
+            e.target.value = status
+            return
+          }
+          cancelReason = trimmed
         }
 
         // Ouvre un message WhatsApp pré-rempli pour prévenir le client — le staff n'a plus qu'à
@@ -48,7 +59,14 @@ export function OrderStatusSelect({
           }
         }
 
-        startTransition(() => updateOrderStatus(orderId, value))
+        startTransition(async () => {
+          try {
+            await updateOrderStatus(orderId, value, cancelReason)
+          } catch (err) {
+            alert(err instanceof Error ? err.message : "Une erreur est survenue.")
+            e.target.value = status
+          }
+        })
       }}
       className="rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium"
     >

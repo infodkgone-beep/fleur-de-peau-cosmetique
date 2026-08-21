@@ -144,22 +144,35 @@ export async function createOrder(input: CreateOrderInput) {
   return orderId
 }
 
-export async function updateOrderStatus(orderId: string, status: "en_attente" | "confirmee" | "expediee" | "livree" | "annulee") {
+export async function updateOrderStatus(
+  orderId: string,
+  status: "en_attente" | "confirmee" | "expediee" | "livree" | "annulee",
+  cancelReason?: string | null
+) {
   const profile = await requireRole(["super_admin", "admin_commercial"])
   const supabase = await createClient()
 
   // Statut actuel, pour ne réagir qu'aux vraies transitions (annulation / réactivation)
   const { data: currentOrder } = await supabase
     .from("orders")
-    .select("status, channel")
+    .select("status, channel, notes")
     .eq("id", orderId)
     .single()
   const previousStatus = currentOrder?.status
   const channel = currentOrder?.channel ?? null
+  const isNewCancellation = status === "annulee" && previousStatus !== "annulee"
+
+  // Une annulation doit toujours être justifiée par un motif écrit : ça évite qu'une commande
+  // déjà confirmée / expédiée / livrée (donc potentiellement déjà payée) soit annulée en
+  // silence, sans laisser de trace de la raison — utile pour repérer un abus a posteriori.
+  const trimmedReason = cancelReason?.trim() ?? ""
+  if (isNewCancellation && !trimmedReason) {
+    throw new Error("Un motif est obligatoire pour annuler une commande.")
+  }
 
   // Annulation : on remet le stock (mouvement inverse historisé), uniquement si la commande
   // n'était pas déjà annulée (sinon on créditerait le stock plusieurs fois pour la même commande)
-  if (status === "annulee" && previousStatus !== "annulee") {
+  if (isNewCancellation) {
     const { data: items } = await supabase.from("order_items").select("product_id, variant_id, quantity").eq("order_id", orderId)
     for (const item of items ?? []) {
       await supabase.rpc("apply_stock_movement", {
@@ -170,7 +183,7 @@ export async function updateOrderStatus(orderId: string, status: "en_attente" | 
         p_channel: null,
         p_reference_order_id: orderId,
         p_reference_purchase_id: null,
-        p_reason: "Annulation de commande",
+        p_reason: `Annulation de commande : ${trimmedReason}`,
         p_created_by: profile.id,
       })
     }
@@ -196,8 +209,27 @@ export async function updateOrderStatus(orderId: string, status: "en_attente" | 
     }
   }
 
-  const { error } = await supabase.from("orders").update({ status }).eq("id", orderId)
+  // Le motif d'annulation est ajouté aux notes de la commande, pour être visible immédiatement
+  // dans le détail de la commande, sans avoir à aller chercher dans l'historique.
+  const updates: { status: typeof status; notes?: string } = { status }
+  if (isNewCancellation) {
+    const existingNotes = currentOrder?.notes?.trim()
+    const cancelNote = `Motif d'annulation : ${trimmedReason} (par ${profile.full_name}, le ${new Date().toLocaleString("fr-FR")}).`
+    updates.notes = existingNotes ? `${existingNotes}\n\n${cancelNote}` : cancelNote
+  }
+
+  const { error } = await supabase.from("orders").update(updates).eq("id", orderId)
   if (error) throw new Error(error.message)
+
+  // Traçabilité : chaque changement de statut est historisé (qui, quand, ancien → nouveau
+  // statut, et le motif s'il s'agit d'une annulation).
+  await supabase.from("activity_log").insert({
+    user_id: profile.id,
+    action: "update",
+    entity_type: "order",
+    entity_id: orderId,
+    details: { previous_status: previousStatus, new_status: status, reason: isNewCancellation ? trimmedReason : null },
+  })
 
   revalidatePath("/admin/commandes")
   revalidatePath("/admin/stock")

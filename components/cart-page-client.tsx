@@ -65,8 +65,21 @@ export function CartPageClient({
         `📍 Lieu de livraison : ${lieu}\n` +
         `📞 Téléphone : ${telephone}`
 
+      // On ouvre WhatsApp tout de suite (de façon synchrone, dans la foulée du clic) pour que
+      // le navigateur mobile n'assimile pas ça à une pop-up bloquée.
       const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
       window.open(url, "_blank", "noopener,noreferrer")
+
+      // On enregistre aussi la commande dans l'admin (en plus du message WhatsApp), pour que
+      // le staff retrouve toutes les commandes au même endroit, PC comme mobile. Ceci se fait en
+      // arrière-plan et n'empêche jamais l'envoi du message WhatsApp au client.
+      createPublicOrder({
+        customer_name: prenom,
+        customer_phone: telephone,
+        delivery_address: lieu,
+        items: items.map((item) => ({ product_id: item.id, quantity: item.quantity, unit_price: item.price })),
+      }).catch(() => {})
+
       setSentVia("whatsapp")
       clear()
       return

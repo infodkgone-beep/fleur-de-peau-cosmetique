@@ -7,12 +7,14 @@ import { notifyAdminNewOrderWhatsApp } from "@/lib/whatsapp-cloud"
 import { formatPrice } from "@/lib/products"
 
 /**
- * Commande passée directement par un client depuis le site public (PC / TV — sans passer par
- * WhatsApp). Il n'existe aucune session client sur la boutique publique, donc on utilise le
- * client "admin" (service_role) pour écrire dans orders/customers/order_items/stock_movements,
- * qui sont normalement réservées au staff par RLS. La commande est créée avec le statut
- * "en_attente" : elle doit être validée (confirmée / refusée / livrée...) dans l'admin, comme
- * n'importe quelle autre commande.
+ * Commande passée directement par un client depuis le site public. Sur PC / TV, c'est l'unique
+ * canal (pas de WhatsApp) ; sur mobile / tablette, elle est enregistrée en plus du message
+ * WhatsApp envoyé au client, pour que le staff retrouve toutes les commandes au même endroit
+ * dans l'admin, quel que soit l'appareil utilisé. Il n'existe aucune session client sur la
+ * boutique publique, donc on utilise le client "admin" (service_role) pour écrire dans
+ * orders/customers/order_items/stock_movements, qui sont normalement réservées au staff par RLS.
+ * La commande est créée avec le statut "en_attente" : elle doit être validée
+ * (confirmée / refusée / livrée...) dans l'admin, comme n'importe quelle autre commande.
  */
 
 const publicOrderItemSchema = z.object({
@@ -84,7 +86,7 @@ export async function createPublicOrder(input: CreatePublicOrderInput): Promise<
         subtotal,
         total: subtotal,
         delivery_address: data.delivery_address,
-        notes: "Commande passée directement depuis le site (PC / TV).",
+        notes: "Commande passée directement depuis le site.",
       })
       .select("id, order_number")
       .single()

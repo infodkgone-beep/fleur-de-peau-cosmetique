@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { X } from "lucide-react"
+import { Minus, Plus, X } from "lucide-react"
 import { OrderForm } from "@/components/order-form"
 import { AddToCartButton } from "@/components/add-to-cart-button"
 import { WhatsAppIcon } from "@/components/site-header"
@@ -21,18 +21,43 @@ export function ProductPurchaseActions({
   whatsappNumber?: string
 }) {
   const [open, setOpen] = useState(false)
+  const [quantity, setQuantity] = useState(1)
 
   function quickWhatsApp() {
     const priceLine = product.oldPrice
-      ? `💰 Prix : ${formatPrice(product.price)} (au lieu de ${formatPrice(product.oldPrice)})`
-      : `💰 Prix : ${formatPrice(product.price)}`
-    const message = `Bonjour Fleur de peau Cosmétique ! Je suis intéressé(e) par :\n\n🌸 ${product.name} (${product.brand})\n${priceLine}`
+      ? `💰 Prix unitaire : ${formatPrice(product.price)} (au lieu de ${formatPrice(product.oldPrice)})`
+      : `💰 Prix unitaire : ${formatPrice(product.price)}`
+    const message =
+      `Bonjour Fleur de peau Cosmétique ! Je suis intéressé(e) par :\n\n🌸 ${product.name} (${product.brand}) x${quantity}\n${priceLine}\n` +
+      `💰 Total : ${formatPrice(product.price * quantity)}`
     window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer")
   }
 
   return (
     <>
       <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-3 rounded-full border border-border bg-card px-2 py-1.5">
+          <span className="pl-2 text-sm font-medium text-foreground">Quantité</span>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              aria-label="Diminuer la quantité"
+              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-secondary hover:text-primary"
+            >
+              <Minus className="h-3.5 w-3.5" />
+            </button>
+            <span className="w-6 text-center text-sm font-semibold text-foreground">{quantity}</span>
+            <button
+              type="button"
+              aria-label="Augmenter la quantité"
+              onClick={() => setQuantity((q) => Math.min(50, q + 1))}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-secondary hover:text-primary"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
         <AddToCartButton
           product={{
             id: product.id,
@@ -42,7 +67,9 @@ export function ProductPurchaseActions({
             price: product.price,
             image,
           }}
+          quantity={quantity}
           disabled={!inStock}
+          onAdded={() => setQuantity(1)}
         />
         <div className="flex flex-col gap-3 sm:flex-row">
           <button
@@ -91,7 +118,12 @@ export function ProductPurchaseActions({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <OrderForm product={product} onSubmitted={() => setOpen(false)} whatsappNumber={whatsappNumber} />
+            <OrderForm
+              product={product}
+              onSubmitted={() => setOpen(false)}
+              whatsappNumber={whatsappNumber}
+              initialQuantity={quantity}
+            />
           </div>
         </div>
       )}

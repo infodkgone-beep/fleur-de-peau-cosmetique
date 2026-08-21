@@ -15,21 +15,26 @@ type CartProduct = {
 
 export function AddToCartButton({
   product,
+  quantity = 1,
   disabled,
   variant = "primary",
   className = "",
+  onAdded,
 }: {
   product: CartProduct
+  quantity?: number
   disabled?: boolean
   variant?: "primary" | "secondary"
   className?: string
+  onAdded?: () => void
 }) {
   const { addItem } = useCart()
   const [added, setAdded] = useState(false)
 
   function handleClick() {
-    addItem(product)
+    addItem(product, quantity)
     setAdded(true)
+    onAdded?.()
     window.setTimeout(() => setAdded(false), 1500)
   }
 

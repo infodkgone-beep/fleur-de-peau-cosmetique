@@ -19,12 +19,14 @@ export function OrderForm({
   product,
   onSubmitted,
   whatsappNumber = DEFAULT_WHATSAPP_NUMBER,
+  initialQuantity = 1,
 }: {
   product: Product
   onSubmitted?: () => void
   whatsappNumber?: string
+  initialQuantity?: number
 }) {
-  const [quantity, setQuantity] = useState(1)
+  const [quantity, setQuantity] = useState(initialQuantity)
   const [prenom, setPrenom] = useState("")
   const [lieu, setLieu] = useState("")
   const [telephone, setTelephone] = useState("")

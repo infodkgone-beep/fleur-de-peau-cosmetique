@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, type FormEvent } from "react"
-import { CheckCircle2 } from "lucide-react"
+import { CheckCircle2, Minus, Plus } from "lucide-react"
 import { WhatsAppIcon } from "@/components/site-header"
 import { WHATSAPP_NUMBER as DEFAULT_WHATSAPP_NUMBER, formatPrice, type Product } from "@/lib/products"
 import { isMobileOrTabletDevice } from "@/lib/device"
@@ -24,6 +24,7 @@ export function OrderForm({
   onSubmitted?: () => void
   whatsappNumber?: string
 }) {
+  const [quantity, setQuantity] = useState(1)
   const [prenom, setPrenom] = useState("")
   const [lieu, setLieu] = useState("")
   const [telephone, setTelephone] = useState("")
@@ -52,13 +53,14 @@ export function OrderForm({
     // Mobile / tablette : WhatsApp est installé, on garde le parcours WhatsApp habituel.
     if (isMobileOrTabletDevice()) {
       const priceLine = product.oldPrice
-        ? `💰 Prix : ${formatPrice(product.price)} (au lieu de ${formatPrice(product.oldPrice)})\n`
-        : `💰 Prix : ${formatPrice(product.price)}\n`
+        ? `💰 Prix unitaire : ${formatPrice(product.price)} (au lieu de ${formatPrice(product.oldPrice)})\n`
+        : `💰 Prix unitaire : ${formatPrice(product.price)}\n`
 
       const message =
         `Bonjour Fleur de peau Cosmétique ! Je souhaite commander :\n\n` +
-        `🌸 Produit : ${product.name} (${product.brand})\n` +
+        `🌸 Produit : ${product.name} (${product.brand}) x${quantity}\n` +
         priceLine +
+        `💰 Total : ${formatPrice(product.price * quantity)}\n` +
         `\n👤 Prénom : ${prenom}\n` +
         `📍 Lieu de livraison : ${lieu}\n` +
         `📞 Téléphone : ${telephone}\n` +
@@ -76,7 +78,7 @@ export function OrderForm({
         customer_name: prenom,
         customer_phone: telephone,
         delivery_address: lieu,
-        items: [{ product_id: product.id, quantity: 1, unit_price: product.price }],
+        items: [{ product_id: product.id, quantity, unit_price: product.price }],
         payment_method: paymentMethod,
       }).catch(() => {})
 
@@ -90,7 +92,7 @@ export function OrderForm({
       customer_name: prenom,
       customer_phone: telephone,
       delivery_address: lieu,
-      items: [{ product_id: product.id, quantity: 1, unit_price: product.price }],
+      items: [{ product_id: product.id, quantity, unit_price: product.price }],
       payment_method: paymentMethod,
     })
     setSubmitting(false)
@@ -132,7 +134,7 @@ export function OrderForm({
           alt={product.name}
           className="h-16 w-16 flex-shrink-0 rounded-xl object-cover"
         />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="truncate font-serif text-base font-semibold text-foreground">{product.name}</p>
           <p className="text-xs text-muted-foreground">{product.brand}</p>
           <p className="mt-0.5 flex items-baseline gap-2 text-sm font-bold text-primary">
@@ -144,7 +146,31 @@ export function OrderForm({
             )}
           </p>
         </div>
+        <div className="flex flex-shrink-0 items-center rounded-full border border-border bg-background">
+          <button
+            type="button"
+            aria-label="Diminuer la quantité"
+            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+            className="flex h-8 w-8 items-center justify-center text-foreground/70 transition-colors hover:text-primary"
+          >
+            <Minus className="h-3.5 w-3.5" />
+          </button>
+          <span className="w-6 text-center text-sm font-semibold text-foreground">{quantity}</span>
+          <button
+            type="button"
+            aria-label="Augmenter la quantité"
+            onClick={() => setQuantity((q) => Math.min(50, q + 1))}
+            className="flex h-8 w-8 items-center justify-center text-foreground/70 transition-colors hover:text-primary"
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
+      {quantity > 1 && (
+        <p className="-mt-2 text-right text-xs text-muted-foreground">
+          Total : <span className="font-semibold text-foreground">{formatPrice(product.price * quantity)}</span>
+        </p>
+      )}
 
       <Field
         id="prenom"

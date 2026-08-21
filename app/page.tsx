@@ -27,8 +27,14 @@ export default async function Page() {
       <CategoryRail categories={categories} />
       <Hero />
       <BannerCarousel />
-      <Promotions whatsappNumber={settings.whatsappNumber} />
-      <Products products={products} whatsappNumber={settings.whatsappNumber} />
+      <div className="flex flex-col">
+        <div className="order-2 lg:order-1">
+          <Promotions whatsappNumber={settings.whatsappNumber} />
+        </div>
+        <div className="order-1 lg:order-2">
+          <Products products={products} whatsappNumber={settings.whatsappNumber} />
+        </div>
+      </div>
       <TrustBanner />
       <WhyChooseUs />
       <SiteFooter />

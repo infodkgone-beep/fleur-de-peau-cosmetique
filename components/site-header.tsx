@@ -2,17 +2,18 @@
 
 import { useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { Menu, X } from "lucide-react"
 import { WHATSAPP_NUMBER } from "@/lib/products"
 import { CartButton } from "@/components/cart-button"
 
 const navLinks = [
-  { label: "Accueil", href: "#accueil" },
-  { label: "Promotions", href: "#promotions" },
-  { label: "Boutique", href: "#boutique" },
-  { label: "Catégories", href: "#categories" },
-  { label: "À propos", href: "#a-propos" },
-  { label: "Contact", href: "#contact" },
+  { label: "Accueil", href: "/#accueil" },
+  { label: "Promotions", href: "/#promotions" },
+  { label: "Boutique", href: "/#boutique" },
+  { label: "Catégories", href: "/#categories" },
+  { label: "À propos", href: "/#a-propos" },
+  { label: "Contact", href: "/#contact" },
 ]
 
 export function SiteHeader() {
@@ -21,7 +22,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <a href="#accueil" className="flex items-center gap-2.5">
+        <Link href="/" className="flex items-center gap-2.5">
           <span className="relative h-11 w-11 overflow-hidden rounded-full ring-1 ring-gold/50">
             <Image
               src="/images/logo-fleur-de-peau.webp"
@@ -34,17 +35,17 @@ export function SiteHeader() {
             <span className="font-serif text-lg font-bold text-primary sm:text-xl">Fleur de peau</span>
             <span className="text-[0.6rem] font-medium uppercase tracking-[0.35em] text-gold">Cosmétique</span>
           </span>
-        </a>
+        </Link>
 
         <nav className="hidden items-center gap-7 lg:flex">
           {navLinks.map((link) => (
-            <a
+            <Link
               key={link.href}
               href={link.href}
               className="text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
             >
               {link.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
@@ -75,13 +76,13 @@ export function SiteHeader() {
           <ul className="flex flex-col">
             {navLinks.map((link) => (
               <li key={link.href}>
-                <a
+                <Link
                   href={link.href}
                   onClick={() => setOpen(false)}
                   className="block rounded-lg px-3 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-primary"
                 >
                   {link.label}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

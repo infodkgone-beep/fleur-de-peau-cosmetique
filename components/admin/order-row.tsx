@@ -3,8 +3,9 @@
 import { useState } from "react"
 import { formatPrice } from "@/lib/products"
 import { OrderStatusSelect } from "@/components/admin/order-status-select"
+import { PaymentStatusSelect } from "@/components/admin/payment-status-select"
 import { OrderRowToggle, OrderRowDetails } from "@/components/admin/order-row-details"
-import type { OrderStatus } from "@/lib/types/database"
+import type { OrderStatus, PaymentStatus } from "@/lib/types/database"
 
 type OrderItem = {
   product_name_snapshot: string
@@ -43,7 +44,7 @@ export function OrderRow({
   customerPhone: string | null
   channel: string
   status: OrderStatus
-  paymentStatus: string
+  paymentStatus: PaymentStatus
   total: number
   createdAt: string
   deliveryAddress: string | null
@@ -69,7 +70,9 @@ export function OrderRow({
           </span>
         </td>
         <td className="px-4 py-3 font-semibold">{formatPrice(total)}</td>
-        <td className="px-4 py-3 capitalize">{paymentStatus.replace("_", " ")}</td>
+        <td className="px-4 py-3">
+          <PaymentStatusSelect orderId={id} paymentStatus={paymentStatus} />
+        </td>
         <td className="px-4 py-3">
           <OrderStatusSelect orderId={id} status={status} orderNumber={orderNumber} customerPhone={customerPhone} />
         </td>

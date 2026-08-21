@@ -234,3 +234,75 @@ export async function updateOrderStatus(
   revalidatePath("/admin/commandes")
   revalidatePath("/admin/stock")
 }
+
+/**
+ * Met à jour le statut de paiement d'une commande (en_attente / partiel / payé / remboursé).
+ * Pour que la comptabilité reflète l'argent réellement encaissé (et pas juste les commandes
+ * passées), chaque changement enregistre aussi le mouvement correspondant dans `payments` :
+ * - "payé" complète automatiquement jusqu'au montant total de la commande.
+ * - "partiel" exige un montant réellement reçu (fourni par le staff).
+ * - "remboursé" annule (en négatif) tout ce qui avait été enregistré comme reçu.
+ * - "en_attente" ne touche à aucun paiement (aucun argent reçu).
+ */
+export async function updatePaymentStatus(
+  orderId: string,
+  paymentStatus: "en_attente" | "partiel" | "paye" | "rembourse",
+  amountReceived?: number | null
+) {
+  const profile = await requireRole(["super_admin", "admin_commercial"])
+  const supabase = await createClient()
+
+  const { data: order } = await supabase.from("orders").select("total").eq("id", orderId).single()
+  if (!order) throw new Error("Commande introuvable.")
+
+  const { data: existingPayments } = await supabase.from("payments").select("amount").eq("order_id", orderId)
+  const alreadyRecorded = (existingPayments ?? []).reduce((sum, p) => sum + p.amount, 0)
+
+  if (paymentStatus === "paye") {
+    const remaining = order.total - alreadyRecorded
+    if (remaining > 0) {
+      await supabase.from("payments").insert({
+        order_id: orderId,
+        amount: remaining,
+        method: "autre" as PaymentMethod,
+        recorded_by: profile.id,
+        notes: "Solde encaissé (commande marquée payée dans l'admin)",
+      })
+    }
+  } else if (paymentStatus === "partiel") {
+    const amount = amountReceived ?? 0
+    if (amount <= 0) {
+      throw new Error("Indique un montant réellement reçu, supérieur à 0, pour un paiement partiel.")
+    }
+    await supabase.from("payments").insert({
+      order_id: orderId,
+      amount,
+      method: "autre" as PaymentMethod,
+      recorded_by: profile.id,
+      notes: "Paiement partiel enregistré dans l'admin",
+    })
+  } else if (paymentStatus === "rembourse" && alreadyRecorded > 0) {
+    await supabase.from("payments").insert({
+      order_id: orderId,
+      amount: -alreadyRecorded,
+      method: "autre" as PaymentMethod,
+      recorded_by: profile.id,
+      notes: "Remboursement — annule les paiements précédemment enregistrés",
+    })
+  }
+
+  const { error } = await supabase.from("orders").update({ payment_status: paymentStatus }).eq("id", orderId)
+  if (error) throw new Error(error.message)
+
+  await supabase.from("activity_log").insert({
+    user_id: profile.id,
+    action: "update",
+    entity_type: "order",
+    entity_id: orderId,
+    details: { field: "payment_status", new_payment_status: paymentStatus, amount: paymentStatus === "partiel" ? amountReceived : null },
+  })
+
+  revalidatePath("/admin/commandes")
+  revalidatePath("/admin/comptabilite")
+  revalidatePath("/admin")
+}

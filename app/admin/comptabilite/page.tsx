@@ -29,12 +29,15 @@ export default async function AccountingPage() {
   const now = new Date()
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1)
 
-  const [ordersRes, itemsRes, expensesRes, revenuesRes, purchasesRes, marginsRes] = await Promise.all([
+  const [ordersRes, itemsRes, paymentsRes, expensesRes, revenuesRes, purchasesRes, marginsRes] = await Promise.all([
     supabase.from("orders").select("id, total, created_at, status").neq("status", "annulee"),
     supabase
       .from("order_items")
       .select("quantity, unit_cost, unit_price, orders!inner(created_at, status)")
       .neq("orders.status", "annulee"),
+    // L'argent réellement encaissé (chiffre d'affaires "cash") vient de `payments`, pas du total
+    // des commandes : une commande non payée n'est pas encore une vente réelle.
+    supabase.from("payments").select("amount, paid_at, orders!inner(status)").neq("orders.status", "annulee"),
     supabase.from("expenses").select("*").order("expense_date", { ascending: false }).limit(200),
     supabase.from("revenues").select("*").order("revenue_date", { ascending: false }).limit(200),
     supabase.from("purchases").select("id, total_cost, created_at"),
@@ -43,13 +46,22 @@ export default async function AccountingPage() {
 
   const orders = ordersRes.data ?? []
   const items = itemsRes.data ?? []
+  const payments = paymentsRes.data ?? []
   const expenses = expensesRes.data ?? []
   const revenues = revenuesRes.data ?? []
   const purchases = purchasesRes.data ?? []
 
-  const caJour = orders.filter((o) => new Date(o.created_at) >= startOfDay(now)).reduce((s, o) => s + o.total, 0)
-  const caMois = orders.filter((o) => new Date(o.created_at) >= startOfMonth(now)).reduce((s, o) => s + o.total, 0)
-  const caAnnee = orders.filter((o) => new Date(o.created_at) >= startOfYear(now)).reduce((s, o) => s + o.total, 0)
+  // CA facturé : total de toutes les commandes non annulées, encaissées ou non.
+  const caFactureMois = orders.filter((o) => new Date(o.created_at) >= startOfMonth(now)).reduce((s, o) => s + o.total, 0)
+
+  // CA encaissé : argent réellement reçu (statut de paiement mis à jour dans l'admin). C'est ce
+  // chiffre qui sert de référence pour la marge et le bénéfice — tant qu'une commande n'est pas
+  // marquée payée (au moins partiellement), cet argent n'existe pas encore.
+  const caEncaisseJour = payments.filter((p) => new Date(p.paid_at) >= startOfDay(now)).reduce((s, p) => s + p.amount, 0)
+  const caEncaisseMois = payments.filter((p) => new Date(p.paid_at) >= startOfMonth(now)).reduce((s, p) => s + p.amount, 0)
+  const caEncaisseAnnee = payments.filter((p) => new Date(p.paid_at) >= startOfYear(now)).reduce((s, p) => s + p.amount, 0)
+
+  const nonEncaisseMois = Math.max(0, caFactureMois - caEncaisseMois)
 
   function cogsSince(since: Date) {
     return items
@@ -63,8 +75,8 @@ export default async function AccountingPage() {
   const revenusDiversMois = revenues.filter((r) => new Date(r.revenue_date) >= startOfMonth(now)).reduce((s, r) => s + r.amount, 0)
   const achatsMois = purchases.filter((p) => new Date(p.created_at) >= startOfMonth(now)).reduce((s, p) => s + p.total_cost, 0)
 
-  const margeBruteMois = caMois - cogsMois
-  const margePercentMois = caMois > 0 ? Math.round((margeBruteMois / caMois) * 100) : 0
+  const margeBruteMois = caEncaisseMois - cogsMois
+  const margePercentMois = caEncaisseMois > 0 ? Math.round((margeBruteMois / caEncaisseMois) * 100) : 0
   const beneficeNetMois = margeBruteMois + revenusDiversMois - depensesMois
 
   // Graphique 6 derniers mois
@@ -75,9 +87,9 @@ export default async function AccountingPage() {
   }
   const chartData = months.map(({ key, date }) => {
     const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 1)
-    const ca = orders
-      .filter((o) => new Date(o.created_at) >= date && new Date(o.created_at) < nextMonth)
-      .reduce((s, o) => s + o.total, 0)
+    const ca = payments
+      .filter((p) => new Date(p.paid_at) >= date && new Date(p.paid_at) < nextMonth)
+      .reduce((s, p) => s + p.amount, 0)
     const dep = expenses
       .filter((e) => new Date(e.expense_date) >= date && new Date(e.expense_date) < nextMonth)
       .reduce((s, e) => s + e.amount, 0)
@@ -95,15 +107,21 @@ export default async function AccountingPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <KpiCard icon={Wallet} label="CA aujourd'hui" value={formatPrice(caJour)} />
-        <KpiCard icon={Wallet} label="CA ce mois" value={formatPrice(caMois)} />
-        <KpiCard icon={TrendingUp} label="CA cette année" value={formatPrice(caAnnee)} />
-        <KpiCard icon={Percent} label="Marge brute (mois)" value={`${formatPrice(margeBruteMois)} (${margePercentMois}%)`} />
+        <KpiCard icon={Wallet} label="Encaissé aujourd'hui" value={formatPrice(caEncaisseJour)} />
+        <KpiCard icon={Wallet} label="Encaissé ce mois" value={formatPrice(caEncaisseMois)} />
+        <KpiCard icon={TrendingUp} label="Encaissé cette année" value={formatPrice(caEncaisseAnnee)} />
+        <KpiCard icon={Percent} label="Marge brute (mois, encaissé)" value={`${formatPrice(margeBruteMois)} (${margePercentMois}%)`} />
+        <KpiCard icon={TrendingDown} label="Commandes non encaissées (mois)" value={formatPrice(nonEncaisseMois)} />
         <KpiCard icon={TrendingDown} label="Dépenses (mois)" value={formatPrice(depensesMois)} />
         <KpiCard icon={ShoppingBag} label="Achats fournisseurs (mois)" value={formatPrice(achatsMois)} />
         <KpiCard icon={TrendingDown} label="Coût des ventes / COGS (année)" value={formatPrice(cogsAnnee)} />
-        <KpiCard icon={PiggyBank} label="Bénéfice net (mois)" value={formatPrice(beneficeNetMois)} highlight />
+        <KpiCard icon={PiggyBank} label="Bénéfice net (mois, encaissé)" value={formatPrice(beneficeNetMois)} highlight />
       </div>
+      <p className="-mt-4 text-xs text-muted-foreground">
+        Total commandes facturées ce mois (payées ou non) : <strong className="text-foreground">{formatPrice(caFactureMois)}</strong>.
+        Seul l&apos;argent marqué &laquo;&nbsp;payé&nbsp;&raquo; ou &laquo;&nbsp;partiel&nbsp;&raquo; dans Commandes / Ventes compte
+        comme encaissé ci-dessus.
+      </p>
 
       <div className="rounded-2xl border border-border bg-card p-5">
         <div className="flex items-center justify-between">

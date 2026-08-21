@@ -1,11 +1,13 @@
 "use client"
 
 import Link from "next/link"
-import { useState, type FormEvent } from "react"
-import { Minus, Plus, Trash2, ShoppingBag, Truck } from "lucide-react"
+import { useEffect, useState, type FormEvent } from "react"
+import { Minus, Plus, Trash2, ShoppingBag, Truck, CheckCircle2 } from "lucide-react"
 import { useCart } from "@/lib/cart-context"
 import { formatPrice, WHATSAPP_NUMBER as DEFAULT_WHATSAPP_NUMBER } from "@/lib/products"
 import { WhatsAppIcon } from "@/components/site-header"
+import { isMobileOrTabletDevice } from "@/lib/device"
+import { createPublicOrder } from "@/lib/actions/public-orders"
 
 type Errors = {
   prenom?: string
@@ -25,11 +27,18 @@ export function CartPageClient({
   const [lieu, setLieu] = useState("")
   const [telephone, setTelephone] = useState("")
   const [errors, setErrors] = useState<Errors>({})
-  const [sent, setSent] = useState(false)
+  const [sentVia, setSentVia] = useState<"whatsapp" | "site" | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [isMobile, setIsMobile] = useState(true)
+
+  useEffect(() => {
+    setIsMobile(isMobileOrTabletDevice())
+  }, [])
 
   const remainingForFreeDelivery = freeDeliveryThreshold - totalPrice
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     const nextErrors: Errors = {}
     if (!prenom.trim()) nextErrors.prenom = "Le prénom est obligatoire."
@@ -37,38 +46,61 @@ export function CartPageClient({
     if (!telephone.trim()) nextErrors.telephone = "Le numéro de téléphone est obligatoire."
 
     setErrors(nextErrors)
+    setSubmitError(null)
     if (Object.keys(nextErrors).length > 0) return
     if (items.length === 0) return
 
-    const lines = items.map(
-      (item) =>
-        `• ${item.name} (${item.brand ?? "Fleur de peau"}) x${item.quantity} — ${formatPrice(item.price * item.quantity)}`
-    )
+    // Mobile / tablette : WhatsApp est installé, on garde le parcours WhatsApp habituel.
+    if (isMobileOrTabletDevice()) {
+      const lines = items.map(
+        (item) =>
+          `• ${item.name} (${item.brand ?? "Fleur de peau"}) x${item.quantity} — ${formatPrice(item.price * item.quantity)}`
+      )
 
-    const message =
-      `Bonjour Fleur de peau Cosmétique ! Je souhaite commander :\n\n` +
-      `${lines.join("\n")}\n\n` +
-      `💰 Total : ${formatPrice(totalPrice)}\n\n` +
-      `👤 Prénom : ${prenom}\n` +
-      `📍 Lieu de livraison : ${lieu}\n` +
-      `📞 Téléphone : ${telephone}`
+      const message =
+        `Bonjour Fleur de peau Cosmétique ! Je souhaite commander :\n\n` +
+        `${lines.join("\n")}\n\n` +
+        `💰 Total : ${formatPrice(totalPrice)}\n\n` +
+        `👤 Prénom : ${prenom}\n` +
+        `📍 Lieu de livraison : ${lieu}\n` +
+        `📞 Téléphone : ${telephone}`
 
-    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
-    window.open(url, "_blank", "noopener,noreferrer")
-    setSent(true)
+      const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
+      window.open(url, "_blank", "noopener,noreferrer")
+      setSentVia("whatsapp")
+      clear()
+      return
+    }
+
+    // PC / TV : on enregistre directement la commande dans le système (visible dans l'admin).
+    setSubmitting(true)
+    const result = await createPublicOrder({
+      customer_name: prenom,
+      customer_phone: telephone,
+      delivery_address: lieu,
+      items: items.map((item) => ({ product_id: item.id, quantity: item.quantity, unit_price: item.price })),
+    })
+    setSubmitting(false)
+
+    if (!result.ok) {
+      setSubmitError(result.error)
+      return
+    }
+    setSentVia("site")
     clear()
   }
 
-  if (sent) {
+  if (sentVia) {
     return (
       <div className="mx-auto flex max-w-lg flex-col items-center gap-4 py-20 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <WhatsAppIcon className="h-8 w-8" />
+          {sentVia === "whatsapp" ? <WhatsAppIcon className="h-8 w-8" /> : <CheckCircle2 className="h-8 w-8" />}
         </div>
         <h1 className="font-serif text-2xl font-bold text-foreground">Commande envoyée !</h1>
         <p className="text-pretty text-muted-foreground">
-          Votre commande a été préparée sur WhatsApp. Confirmez son envoi dans l&apos;application pour que nous
-          puissions la traiter.
+          {sentVia === "whatsapp"
+            ? "Votre commande a été préparée sur WhatsApp. Confirmez son envoi dans l'application pour que nous puissions la traiter."
+            : "Votre commande a bien été transmise à notre équipe. Nous vous contacterons très vite au numéro indiqué pour la confirmer."}
         </p>
         <Link
           href="/"
@@ -203,15 +235,23 @@ export function CartPageClient({
             onChange={setTelephone}
             error={errors.telephone}
           />
+          {submitError && (
+            <p className="rounded-xl bg-destructive/10 px-3 py-2 text-center text-xs font-medium text-destructive">
+              {submitError}
+            </p>
+          )}
           <button
             type="submit"
-            className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-transform hover:scale-[1.02]"
+            disabled={submitting}
+            className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-transform hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
           >
-            <WhatsAppIcon className="h-4 w-4" />
-            Envoyer la commande sur WhatsApp
+            {isMobile && <WhatsAppIcon className="h-4 w-4" />}
+            {submitting ? "Envoi en cours..." : isMobile ? "Envoyer la commande sur WhatsApp" : "Envoyer la commande"}
           </button>
           <p className="text-center text-xs text-muted-foreground">
-            Vous serez redirigé vers WhatsApp avec votre commande complète pré-remplie.
+            {isMobile
+              ? "Vous serez redirigé vers WhatsApp avec votre commande complète pré-remplie."
+              : "Votre commande sera transmise directement à notre équipe, qui vous contactera pour la confirmer."}
           </p>
         </form>
       </div>

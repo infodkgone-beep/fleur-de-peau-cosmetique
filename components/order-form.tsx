@@ -1,8 +1,11 @@
 "use client"
 
-import { useState, type FormEvent } from "react"
+import { useEffect, useState, type FormEvent } from "react"
+import { CheckCircle2 } from "lucide-react"
 import { WhatsAppIcon } from "@/components/site-header"
 import { WHATSAPP_NUMBER as DEFAULT_WHATSAPP_NUMBER, formatPrice, type Product } from "@/lib/products"
+import { isMobileOrTabletDevice } from "@/lib/device"
+import { createPublicOrder } from "@/lib/actions/public-orders"
 
 type Errors = {
   prenom?: string
@@ -23,8 +26,16 @@ export function OrderForm({
   const [lieu, setLieu] = useState("")
   const [telephone, setTelephone] = useState("")
   const [errors, setErrors] = useState<Errors>({})
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [sentDirectly, setSentDirectly] = useState(false)
+  const [isMobile, setIsMobile] = useState(true)
 
-  function handleSubmit(e: FormEvent) {
+  useEffect(() => {
+    setIsMobile(isMobileOrTabletDevice())
+  }, [])
+
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     const nextErrors: Errors = {}
     if (!prenom.trim()) nextErrors.prenom = "Le prénom est obligatoire."
@@ -32,23 +43,66 @@ export function OrderForm({
     if (!telephone.trim()) nextErrors.telephone = "Le numéro de téléphone est obligatoire."
 
     setErrors(nextErrors)
+    setSubmitError(null)
     if (Object.keys(nextErrors).length > 0) return
 
-    const priceLine = product.oldPrice
-      ? `💰 Prix : ${formatPrice(product.price)} (au lieu de ${formatPrice(product.oldPrice)})\n`
-      : `💰 Prix : ${formatPrice(product.price)}\n`
+    // Mobile / tablette : WhatsApp est installé, on garde le parcours WhatsApp habituel.
+    if (isMobileOrTabletDevice()) {
+      const priceLine = product.oldPrice
+        ? `💰 Prix : ${formatPrice(product.price)} (au lieu de ${formatPrice(product.oldPrice)})\n`
+        : `💰 Prix : ${formatPrice(product.price)}\n`
 
-    const message =
-      `Bonjour Fleur de peau Cosmétique ! Je souhaite commander :\n\n` +
-      `🌸 Produit : ${product.name} (${product.brand})\n` +
-      priceLine +
-      `\n👤 Prénom : ${prenom}\n` +
-      `📍 Lieu de livraison : ${lieu}\n` +
-      `📞 Téléphone : ${telephone}`
+      const message =
+        `Bonjour Fleur de peau Cosmétique ! Je souhaite commander :\n\n` +
+        `🌸 Produit : ${product.name} (${product.brand})\n` +
+        priceLine +
+        `\n👤 Prénom : ${prenom}\n` +
+        `📍 Lieu de livraison : ${lieu}\n` +
+        `📞 Téléphone : ${telephone}`
 
-    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
-    window.open(url, "_blank", "noopener,noreferrer")
-    onSubmitted?.()
+      const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
+      window.open(url, "_blank", "noopener,noreferrer")
+      onSubmitted?.()
+      return
+    }
+
+    // PC / TV : on enregistre directement la commande dans le système (visible dans l'admin).
+    setSubmitting(true)
+    const result = await createPublicOrder({
+      customer_name: prenom,
+      customer_phone: telephone,
+      delivery_address: lieu,
+      items: [{ product_id: product.id, quantity: 1, unit_price: product.price }],
+    })
+    setSubmitting(false)
+
+    if (!result.ok) {
+      setSubmitError(result.error)
+      return
+    }
+    setSentDirectly(true)
+  }
+
+  if (sentDirectly) {
+    return (
+      <div className="flex flex-col items-center gap-3 py-6 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <CheckCircle2 className="h-7 w-7" />
+        </div>
+        <h4 className="font-serif text-lg font-bold text-foreground">Commande envoyée !</h4>
+        <p className="text-pretty text-sm text-muted-foreground">
+          Votre commande a bien été transmise à notre équipe. Nous vous contacterons très vite au numéro indiqué
+          pour la confirmer.
+        </p>
+        <button
+          type="button"
+          onClick={() => onSubmitted?.()}
+          className="mt-1 inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.02]"
+        >
+          Fermer
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -99,15 +153,23 @@ export function OrderForm({
         error={errors.telephone}
       />
 
+      {submitError && (
+        <p className="rounded-xl bg-destructive/10 px-3 py-2 text-center text-xs font-medium text-destructive">
+          {submitError}
+        </p>
+      )}
       <button
         type="submit"
-        className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-transform hover:scale-[1.02]"
+        disabled={submitting}
+        className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-transform hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
       >
-        <WhatsAppIcon className="h-4 w-4" />
-        Envoyer la commande sur WhatsApp
+        {isMobile && <WhatsAppIcon className="h-4 w-4" />}
+        {submitting ? "Envoi en cours..." : isMobile ? "Envoyer la commande sur WhatsApp" : "Envoyer la commande"}
       </button>
       <p className="text-center text-xs text-muted-foreground">
-        Vous serez redirigé vers WhatsApp avec votre commande pré-remplie.
+        {isMobile
+          ? "Vous serez redirigé vers WhatsApp avec votre commande pré-remplie."
+          : "Votre commande sera transmise directement à notre équipe, qui vous contactera pour la confirmer."}
       </p>
     </form>
   )

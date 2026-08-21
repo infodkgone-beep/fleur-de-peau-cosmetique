@@ -9,6 +9,7 @@ import { TrustBanner } from "@/components/trust-banner"
 import { WhyChooseUs } from "@/components/why-choose-us"
 import { SiteFooter } from "@/components/site-footer"
 import { WhatsAppFloat } from "@/components/whatsapp-float"
+import { PwaInstallButton } from "@/components/pwa-install-button"
 import { getActiveCategories, getActiveProducts, getSiteSettings } from "@/lib/storefront"
 
 export const revalidate = 60
@@ -39,6 +40,7 @@ export default async function Page() {
       <WhyChooseUs />
       <SiteFooter />
       <WhatsAppFloat whatsappNumber={settings.whatsappNumber} />
+      <PwaInstallButton />
     </main>
   )
 }

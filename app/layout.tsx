@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import { Playfair_Display, Inter } from 'next/font/google'
 import { MarketingPixels } from '@/components/marketing-pixels'
 import { VisitTracker } from '@/components/visit-tracker'
+import { PwaRegister } from '@/components/pwa-register'
 import { CartProvider } from '@/lib/cart-context'
 import './globals.css'
 
@@ -69,6 +70,11 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Fleur de peau',
+  },
 }
 
 export const viewport: Viewport = {
@@ -91,6 +97,7 @@ export default function RootLayout({
         {process.env.NODE_ENV === 'production' && <Analytics />}
         {process.env.NODE_ENV === 'production' && <MarketingPixels />}
         {process.env.NODE_ENV === 'production' && <VisitTracker />}
+        <PwaRegister />
       </body>
     </html>
   )

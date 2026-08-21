@@ -3,6 +3,7 @@ import { AnnouncementBar } from "@/components/announcement-bar"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { WhatsAppFloat } from "@/components/whatsapp-float"
+import { PwaInstallButton } from "@/components/pwa-install-button"
 import { CartPageClient } from "@/components/cart-page-client"
 import { getSiteSettings } from "@/lib/storefront"
 
@@ -30,6 +31,7 @@ export default async function CartPage() {
 
       <SiteFooter />
       <WhatsAppFloat whatsappNumber={settings.whatsappNumber} />
+      <PwaInstallButton />
     </main>
   )
 }

@@ -6,6 +6,7 @@ import { AnnouncementBar } from "@/components/announcement-bar"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { WhatsAppFloat } from "@/components/whatsapp-float"
+import { PwaInstallButton } from "@/components/pwa-install-button"
 import { ProductGallery } from "@/components/product-gallery"
 import { ProductPurchaseActions } from "@/components/product-purchase-actions"
 import { formatPrice, type Product } from "@/lib/products"
@@ -237,6 +238,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
       <SiteFooter />
       <WhatsAppFloat whatsappNumber={settings.whatsappNumber} />
+      <PwaInstallButton />
     </main>
   )
 }

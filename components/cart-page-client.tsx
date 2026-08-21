@@ -323,7 +323,23 @@ export function PaymentMethodField({
   value: PaymentMethodChoice
   onChange: (v: PaymentMethodChoice) => void
 }) {
+  const [copied, setCopied] = useState(false)
   const selected = PAYMENT_METHOD_OPTIONS.find((o) => o.value === value)
+  const number = selected?.label.match(/\+225[\d\s]+/)?.[0]?.trim()
+
+  async function handleCopyNumber() {
+    if (!number) return
+    try {
+      // On copie le numéro sans espaces, tel qu'il faut le coller dans Wave / Orange Money.
+      await navigator.clipboard.writeText(number.replace(/\s/g, ""))
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Presse-papier indisponible sur ce navigateur : le numéro reste affiché, le client peut
+      // toujours le recopier lui-même.
+    }
+  }
+
   return (
     <div className="flex flex-col gap-1.5">
       <label className="text-sm font-medium text-foreground">
@@ -345,11 +361,20 @@ export function PaymentMethodField({
           </button>
         ))}
       </div>
-      {(value === "wave" || value === "orange_money") && (
-        <p className="rounded-xl bg-secondary/60 px-3 py-2 text-xs text-muted-foreground">
-          Envoyez le montant de votre commande au <strong className="text-foreground">{selected?.label.match(/\+225[\d\s]+/)?.[0]}</strong>{" "}
-          ({selected?.shortLabel}), nous confirmerons la réception avant l&apos;expédition.
-        </p>
+      {(value === "wave" || value === "orange_money") && number && (
+        <div className="flex flex-col gap-2 rounded-xl bg-secondary/60 px-3 py-2.5 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <span>
+            Envoyez le montant de votre commande au <strong className="text-foreground">{number}</strong> ({selected?.shortLabel}),
+            nous confirmerons la réception avant l&apos;expédition.
+          </span>
+          <button
+            type="button"
+            onClick={handleCopyNumber}
+            className="flex-shrink-0 rounded-full border border-primary/40 bg-background px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+          >
+            {copied ? "Copié !" : "Copier le numéro"}
+          </button>
+        </div>
       )}
     </div>
   )

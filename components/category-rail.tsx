@@ -70,7 +70,7 @@ export function CategoryRail({ categories }: { categories: Category[] }) {
   return (
     <div
       ref={containerRef}
-      className="fixed left-0 top-20 z-30 flex max-h-[calc(100vh-6rem)] flex-col gap-1 overflow-y-auto py-1 sm:top-24 sm:gap-1.5"
+      className="fixed left-0 top-1/2 z-30 flex max-h-[80vh] -translate-y-1/2 flex-col gap-1 overflow-y-auto py-1 sm:gap-1.5"
     >
       {categories.map((cat, i) => {
         const Icon = iconMap[cat.icon ?? ""] ?? Sparkles

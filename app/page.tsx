@@ -26,8 +26,8 @@ export default async function Page() {
       <AnnouncementBar announcements={settings.announcements} />
       <SiteHeader />
       <CategoryRail categories={categories} />
-      <Hero />
       <BannerCarousel />
+      <Hero />
       <div className="flex flex-col">
         <div className="order-2 lg:order-1">
           <Promotions whatsappNumber={settings.whatsappNumber} />

@@ -29,12 +29,8 @@ export default async function Page() {
       <BannerCarousel />
       <Hero />
       <div className="flex flex-col">
-        <div className="order-2 lg:order-1">
-          <Promotions whatsappNumber={settings.whatsappNumber} />
-        </div>
-        <div className="order-1 lg:order-2">
-          <Products products={products} whatsappNumber={settings.whatsappNumber} />
-        </div>
+        <Products products={products} whatsappNumber={settings.whatsappNumber} />
+        <Promotions whatsappNumber={settings.whatsappNumber} />
       </div>
       <TrustBanner />
       <WhyChooseUs />

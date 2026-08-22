@@ -49,13 +49,17 @@ export default async function ContentPage() {
         <div className="flex flex-col gap-2">
           {(banners ?? []).map((b) => (
             <div key={b.id} className="flex items-center gap-4 rounded-2xl border border-border bg-card p-3">
+              {b.image_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={b.image_url} alt="" className="h-16 w-16 flex-shrink-0 rounded-xl object-cover" />
+              )}
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-foreground">
                   {b.title} {b.badge && <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">{b.badge}</span>}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">{b.description ?? "—"}</p>
               </div>
-              <BannerRowActions id={b.id} active={b.active} />
+              <BannerRowActions id={b.id} active={b.active} cloudinaryPublicId={b.cloudinary_public_id} />
             </div>
           ))}
           {(banners ?? []).length === 0 && <p className="text-sm text-muted-foreground">Aucune bannière pour l&apos;instant.</p>}

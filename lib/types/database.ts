@@ -276,6 +276,8 @@ export type BannerRow = {
   badge: string | null
   code: string | null
   link: string | null
+  image_url: string | null
+  cloudinary_public_id: string | null
   sort_order: number
   active: boolean
   updated_by: string | null

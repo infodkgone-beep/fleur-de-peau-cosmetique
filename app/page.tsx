@@ -10,15 +10,23 @@ import { WhyChooseUs } from "@/components/why-choose-us"
 import { SiteFooter } from "@/components/site-footer"
 import { WhatsAppFloat } from "@/components/whatsapp-float"
 import { PwaInstallButton } from "@/components/pwa-install-button"
-import { getActiveCategories, getActiveProducts, getSiteSettings } from "@/lib/storefront"
+import {
+  getActiveBanners,
+  getActiveCategories,
+  getActiveProducts,
+  getPrimaryHeroSlide,
+  getSiteSettings,
+} from "@/lib/storefront"
 
 export const revalidate = 60
 
 export default async function Page() {
-  const [products, categories, settings] = await Promise.all([
+  const [products, categories, settings, heroSlide, banners] = await Promise.all([
     getActiveProducts(),
     getActiveCategories(),
     getSiteSettings(),
+    getPrimaryHeroSlide(),
+    getActiveBanners(),
   ])
 
   return (
@@ -35,8 +43,8 @@ export default async function Page() {
       <AnnouncementBar announcements={settings.announcements} />
       <SiteHeader />
       <CategoryRail categories={categories} />
-      <BannerCarousel />
-      <Hero />
+      <BannerCarousel banners={banners} />
+      <Hero slide={heroSlide} />
       <div className="flex flex-col">
         <Products products={products} whatsappNumber={settings.whatsappNumber} />
         <Promotions whatsappNumber={settings.whatsappNumber} />

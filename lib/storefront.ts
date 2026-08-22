@@ -232,6 +232,81 @@ export async function getSiteSettings(): Promise<SiteSettingsPublic> {
   }
 }
 
+export type StorefrontHeroSlide = {
+  id: string
+  eyebrow: string | null
+  title: string
+  subtitle: string | null
+  ctaLabel: string | null
+  ctaHref: string | null
+  imageUrl: string
+}
+
+/**
+ * Slide "hero" à afficher en haut de la page d'accueil — géré depuis l'admin (Contenu du site).
+ * On ne prend que le plus récemment modifié parmi les slides actifs : le hero n'affiche qu'une
+ * seule image à la fois (contrairement au carrousel de bannières), donc la dernière modification
+ * gagne. `null` si aucun slide actif n'existe encore (le composant Hero utilise alors un contenu
+ * de secours codé en dur, pour ne jamais laisser la page d'accueil vide).
+ */
+export async function getPrimaryHeroSlide(): Promise<StorefrontHeroSlide | null> {
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from("hero_slides")
+    .select("id, eyebrow, title, subtitle, cta_label, cta_href, image_url")
+    .eq("active", true)
+    .not("image_url", "is", null)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!data || !data.image_url) return null
+
+  return {
+    id: data.id,
+    eyebrow: data.eyebrow,
+    title: data.title,
+    subtitle: data.subtitle,
+    ctaLabel: data.cta_label,
+    ctaHref: data.cta_href,
+    imageUrl: data.image_url,
+  }
+}
+
+export type StorefrontBanner = {
+  id: string
+  title: string
+  description: string | null
+  badge: string | null
+  code: string | null
+  link: string | null
+  imageUrl: string
+}
+
+/** Bannières promotionnelles actives pour le carrousel d'accueil, gérées depuis l'admin. */
+export async function getActiveBanners(): Promise<StorefrontBanner[]> {
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from("banners")
+    .select("id, title, description, badge, code, link, image_url")
+    .eq("active", true)
+    .not("image_url", "is", null)
+    .order("sort_order", { ascending: true })
+    .order("updated_at", { ascending: true })
+
+  return (data ?? [])
+    .filter((b): b is typeof b & { image_url: string } => Boolean(b.image_url))
+    .map((b) => ({
+      id: b.id,
+      title: b.title,
+      description: b.description,
+      badge: b.badge,
+      code: b.code,
+      link: b.link,
+      imageUrl: b.image_url,
+    }))
+}
+
 export type PublicMarketingPixel = { platform: string; pixelId: string | null }
 
 /** Pixels marketing actifs, pour l'injection dans le site public. */

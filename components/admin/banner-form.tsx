@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { ImageUploader, type UploadedImage } from "@/components/admin/image-uploader"
 import { saveBanner } from "@/lib/actions/content"
 
 export function BannerForm() {
@@ -11,11 +12,16 @@ export function BannerForm() {
   const [badge, setBadge] = useState("")
   const [code, setCode] = useState("")
   const [link, setLink] = useState("")
+  const [images, setImages] = useState<UploadedImage[]>([])
 
   function handleSubmit() {
     setError(null)
     if (!title.trim()) {
       setError("Le titre est obligatoire.")
+      return
+    }
+    if (images.length === 0) {
+      setError("Ajoute une image pour cette bannière.")
       return
     }
     startTransition(async () => {
@@ -27,6 +33,8 @@ export function BannerForm() {
           badge: badge || null,
           code: code || null,
           link: link || null,
+          image_url: images[0].url,
+          cloudinary_public_id: images[0].publicId,
           active: true,
         })
         setTitle("")
@@ -34,6 +42,7 @@ export function BannerForm() {
         setBadge("")
         setCode("")
         setLink("")
+        setImages([])
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erreur.")
       }
@@ -43,6 +52,7 @@ export function BannerForm() {
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5">
       <h3 className="font-serif text-base font-semibold">Ajouter une promotion / bannière</h3>
+      <ImageUploader images={images} onChange={setImages} minImages={1} />
       <div className="grid gap-3 sm:grid-cols-2">
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Titre (ex: Offre de la semaine)" className="content-input" />
         <input value={badge} onChange={(e) => setBadge(e.target.value)} placeholder="Badge (ex: -25%)" className="content-input" />

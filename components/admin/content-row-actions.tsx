@@ -42,7 +42,15 @@ export function HeroSlideRowActions({
   )
 }
 
-export function BannerRowActions({ id, active }: { id: string; active: boolean }) {
+export function BannerRowActions({
+  id,
+  active,
+  cloudinaryPublicId,
+}: {
+  id: string
+  active: boolean
+  cloudinaryPublicId: string | null
+}) {
   const [isPending, startTransition] = useTransition()
 
   return (
@@ -61,7 +69,7 @@ export function BannerRowActions({ id, active }: { id: string; active: boolean }
         type="button"
         disabled={isPending}
         onClick={() => {
-          if (confirm("Supprimer cette bannière ?")) startTransition(() => deleteBanner(id))
+          if (confirm("Supprimer cette bannière ?")) startTransition(() => deleteBanner(id, cloudinaryPublicId))
         }}
         className="text-muted-foreground hover:text-destructive disabled:opacity-50"
         aria-label="Supprimer"

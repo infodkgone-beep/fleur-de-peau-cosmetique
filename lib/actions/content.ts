@@ -79,6 +79,8 @@ const bannerSchema = z.object({
   badge: z.string().nullable(),
   code: z.string().nullable(),
   link: z.string().nullable(),
+  image_url: z.string().nullable(),
+  cloudinary_public_id: z.string().nullable(),
   active: z.boolean(),
 })
 
@@ -93,6 +95,8 @@ export async function saveBanner(input: z.infer<typeof bannerSchema>) {
     badge: parsed.badge,
     code: parsed.code,
     link: parsed.link,
+    image_url: parsed.image_url,
+    cloudinary_public_id: parsed.cloudinary_public_id,
     active: parsed.active,
     updated_by: profile.id,
   }
@@ -115,11 +119,18 @@ export async function toggleBannerActive(id: string, active: boolean) {
   revalidatePath("/")
 }
 
-export async function deleteBanner(id: string) {
+export async function deleteBanner(id: string, cloudinaryPublicId: string | null) {
   await requireRole(CONTENT_ROLES)
   const supabase = await createClient()
   const { error } = await supabase.from("banners").delete().eq("id", id)
   if (error) throw new Error(error.message)
+  if (cloudinaryPublicId) {
+    try {
+      await deleteCloudinaryImage(cloudinaryPublicId)
+    } catch {
+      // pas bloquant
+    }
+  }
   revalidatePath("/admin/contenu")
   revalidatePath("/")
 }

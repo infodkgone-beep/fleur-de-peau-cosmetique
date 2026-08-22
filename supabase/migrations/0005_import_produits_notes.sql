@@ -1,0 +1,97 @@
+-- Ajoute en brouillon (invisibles sur le site tant que non publiés) les nouveaux produits
+-- fournis par la boutique, classes par categorie du mieux possible a partir des noms.
+-- Prix et stock sont a 0 : ouvre chaque produit dans /admin/produits pour renseigner
+-- le prix, le stock et une photo, puis passe son statut sur "Actif" pour le publier.
+
+insert into brands (name, slug)
+values
+  ('Aromazone', 'aromazone'),
+  ('Bioderma', 'bioderma'),
+  ('Garnier', 'garnier'),
+  ('Mixa', 'mixa'),
+  ('Neutrogena', 'neutrogena'),
+  ('Nivea', 'nivea'),
+  ('Nubiance', 'nubiance'),
+  ('Olay', 'olay'),
+  ('Oxyprolane', 'oxyprolane'),
+  ('Sanex', 'sanex'),
+  ('The Ordinary', 'the-ordinary'),
+  ('Topicrem', 'topicrem')
+on conflict (name) do nothing;
+
+insert into products (name, slug, category_id, brand_id, price, stock_quantity, status, imported)
+select v.name, v.slug, c.id, b.id, 0, 0, 'brouillon', true
+from (values
+  ('Mixa Niacinamide', 'mixa-niacinamide', 'Mixa', 'Soins du visage'),
+  ('Mixa la crème fraîche et fondante', 'mixa-la-creme-fraiche-et-fondante', 'Mixa', 'Soins du corps'),
+  ('Mixa crème réparatrice', 'mixa-creme-reparatrice', 'Mixa', 'Soins du corps'),
+  ('Mixa cica réparation', 'mixa-cica-reparation', 'Mixa', 'Soins du corps'),
+  ('Mixa cica réparation 10en1', 'mixa-cica-reparation-10en1', 'Mixa', 'Soins du corps'),
+  ('Topicrem lait ultra hydratant', 'topicrem-lait-ultra-hydratant', 'Topicrem', 'Soins du corps'),
+  ('Topicrem gel ultra hydratant', 'topicrem-gel-ultra-hydratant', 'Topicrem', 'Soins du corps'),
+  ('Topicrem huile de douche ultra hydratant', 'topicrem-huile-de-douche-ultra-hydratant', 'Topicrem', 'Soins du corps'),
+  ('Topicrem lait mêla', 'topicrem-lait-mela', 'Topicrem', 'Soins du corps'),
+  ('Topicrem savon mêla', 'topicrem-savon-mela', 'Topicrem', 'Soins du corps'),
+  ('Topicrem huile cica+', 'topicrem-huile-cica', 'Topicrem', 'Soins du corps'),
+  ('Topicrem baume DA', 'topicrem-baume-da', 'Topicrem', 'Soins du corps'),
+  ('Topicrem gel DA', 'topicrem-gel-da', 'Topicrem', 'Soins du corps'),
+  ('Aromazone savon illuminateur', 'aromazone-savon-illuminateur', 'Aromazone', 'Anti-taches éclaircissants'),
+  ('Aromazone savon exfoliant', 'aromazone-savon-exfoliant', 'Aromazone', 'Soins du corps'),
+  ('Oxyprolane savon éclat du teint', 'oxyprolane-savon-eclat-du-teint', 'Oxyprolane', 'Anti-taches éclaircissants'),
+  ('Oxyprolane lait éclat du teint', 'oxyprolane-lait-eclat-du-teint', 'Oxyprolane', 'Anti-taches éclaircissants'),
+  ('Nubiance lait anti tache', 'nubiance-lait-anti-tache', 'Nubiance', 'Anti-taches éclaircissants'),
+  ('Nubiance gel exfoliant', 'nubiance-gel-exfoliant', 'Nubiance', 'Soins du visage'),
+  ('Nubiance gel nettoyant anti imperfections', 'nubiance-gel-nettoyant-anti-imperfections', 'Nubiance', 'Soins du visage'),
+  ('Sanex huile lavante', 'sanex-huile-lavante', 'Sanex', 'Soins du corps'),
+  ('Bioderma crème atoderm', 'bioderma-creme-atoderm', 'Bioderma', 'Soins du corps'),
+  ('Bioderma gel douche atoderm', 'bioderma-gel-douche-atoderm', 'Bioderma', 'Soins du corps'),
+  ('Olay vitamine C', 'olay-vitamine-c', 'Olay', 'Soins du visage'),
+  ('Olay Niacinamide', 'olay-niacinamide', 'Olay', 'Soins du visage'),
+  ('Olay collagène et peptide', 'olay-collagene-et-peptide', 'Olay', 'Soins du corps'),
+  ('Nivea repair', 'nivea-repair', 'Nivea', 'Soins du corps'),
+  ('Neutrogena lait hydratation profonde', 'neutrogena-lait-hydratation-profonde', 'Neutrogena', 'Soins du corps'),
+  ('Neutrogena baume hydratation profonde', 'neutrogena-baume-hydratation-profonde', 'Neutrogena', 'Soins du corps'),
+  ('Neutrogena gel anti bouton', 'neutrogena-gel-anti-bouton', 'Neutrogena', 'Soins du visage'),
+  ('Neutrogena gel anti brillance', 'neutrogena-gel-anti-brillance', 'Neutrogena', 'Soins du visage'),
+  ('Neutrogena pureté pamplemousse', 'neutrogena-purete-pamplemousse', 'Neutrogena', 'Soins du visage'),
+  ('Neutrogena hydro boost gel crème', 'neutrogena-hydro-boost-gel-creme', 'Neutrogena', 'Soins du visage'),
+  ('Neutrogena hydro boost eau micellaire', 'neutrogena-hydro-boost-eau-micellaire', 'Neutrogena', 'Soins du visage'),
+  ('Garnier gel nettoyant vitamine C', 'garnier-gel-nettoyant-vitamine-c', 'Garnier', 'Soins du visage'),
+  ('Garnier gel nettoyant salicylique', 'garnier-gel-nettoyant-salicylique', 'Garnier', 'Soins du visage'),
+  ('Garnier gel nettoyant BHA charbon', 'garnier-gel-nettoyant-bha-charbon', 'Garnier', 'Soins du visage'),
+  ('Garnier gel nettoyant hyaluronique', 'garnier-gel-nettoyant-hyaluronique', 'Garnier', 'Soins du visage'),
+  ('Garnier eau micellaire tout en 1', 'garnier-eau-micellaire-tout-en-1', 'Garnier', 'Soins du visage'),
+  ('Garnier eau micellaire waterproof', 'garnier-eau-micellaire-waterproof', 'Garnier', 'Soins du visage'),
+  ('Garnier nettoyant 3en1 charbon', 'garnier-nettoyant-3en1-charbon', 'Garnier', 'Soins du visage'),
+  ('Garnier nettoyant 3en1 salicylique', 'garnier-nettoyant-3en1-salicylique', 'Garnier', 'Soins du visage'),
+  ('Garnier lotion salicylique', 'garnier-lotion-salicylique', 'Garnier', 'Soins du visage'),
+  ('Garnier glow booster vitamine C', 'garnier-glow-booster-vitamine-c', 'Garnier', 'Soins du visage'),
+  ('Garnier sérum vitamine C anti dark spot', 'garnier-serum-vitamine-c-anti-dark-spot', 'Garnier', 'Anti-taches éclaircissants'),
+  ('Garnier sérum vitamine C 10%', 'garnier-serum-vitamine-c-10', 'Garnier', 'Soins du visage'),
+  ('Garnier sérum AHA BHA', 'garnier-serum-aha-bha', 'Garnier', 'Soins du visage'),
+  ('Garnier crème AHA BHA', 'garnier-creme-aha-bha', 'Garnier', 'Soins du visage'),
+  ('Garnier crème rose', 'garnier-creme-rose', 'Garnier', 'Soins du visage'),
+  ('Garnier stick solaire', 'garnier-stick-solaire', 'Garnier', 'Protection solaire'),
+  ('Aromazone sérum vitamine C', 'aromazone-serum-vitamine-c', 'Aromazone', 'Soins du visage'),
+  ('Aromazone sérum Niacinamide', 'aromazone-serum-niacinamide', 'Aromazone', 'Soins du visage'),
+  ('Aromazone sérum rétinal', 'aromazone-serum-retinal', 'Aromazone', 'Soins du visage'),
+  ('Aromazone sérum collagène', 'aromazone-serum-collagene', 'Aromazone', 'Soins du visage'),
+  ('Aromazone sérum anti taches hordénine', 'aromazone-serum-anti-taches-hordenine', 'Aromazone', 'Anti-taches éclaircissants'),
+  ('Aromazone sérum anti tache dark spot', 'aromazone-serum-anti-tache-dark-spot', 'Aromazone', 'Anti-taches éclaircissants'),
+  ('Aromazone sérum azélaïque', 'aromazone-serum-azelaique', 'Aromazone', 'Soins du visage'),
+  ('Aromazone sérum salicylique', 'aromazone-serum-salicylique', 'Aromazone', 'Soins du visage'),
+  ('Aromazone toner Niacinamide', 'aromazone-toner-niacinamide', 'Aromazone', 'Soins du visage'),
+  ('Aromazone sérum bonne mine', 'aromazone-serum-bonne-mine', 'Aromazone', 'Soins du visage'),
+  ('Aromazone sérum acide glycolique', 'aromazone-serum-acide-glycolique', 'Aromazone', 'Soins du visage'),
+  ('Aromazone sérum bakuchiol', 'aromazone-serum-bakuchiol', 'Aromazone', 'Soins du visage'),
+  ('The Ordinary Niacinamide', 'the-ordinary-niacinamide', 'The Ordinary', 'Soins du visage'),
+  ('The Ordinary acide salicylique', 'the-ordinary-acide-salicylique', 'The Ordinary', 'Soins du visage'),
+  ('The Ordinary acide mandélique', 'the-ordinary-acide-mandelique', 'The Ordinary', 'Soins du visage'),
+  ('The Ordinary AHA BHA', 'the-ordinary-aha-bha', 'The Ordinary', 'Soins du visage'),
+  ('The Ordinary toner acide glycolique', 'the-ordinary-toner-acide-glycolique', 'The Ordinary', 'Soins du visage'),
+  ('Mixa sérum vitamine C et acide glycolique', 'mixa-serum-vitamine-c-et-acide-glycolique', 'Mixa', 'Soins du visage'),
+  ('Mixa crème anti tache Niacinamide', 'mixa-creme-anti-tache-niacinamide', 'Mixa', 'Anti-taches éclaircissants')
+) as v(name, slug, brand_name, category_name)
+join categories c on c.name = v.category_name
+join brands b on b.name = v.brand_name
+on conflict (slug) do nothing;

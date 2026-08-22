@@ -3,27 +3,39 @@ import { createClient } from "@/lib/supabase/server"
 import { HeroSlideForm } from "@/components/admin/hero-slide-form"
 import { BannerForm } from "@/components/admin/banner-form"
 import { HeroSlideRowActions, BannerRowActions } from "@/components/admin/content-row-actions"
+import { WhyChooseUsImageForm } from "@/components/admin/why-choose-us-image-form"
+
+const DEFAULT_WHY_CHOOSE_US_IMAGE = "/images/why-choose-us.webp"
 
 export default async function ContentPage() {
   await requireRole(["super_admin", "content_manager"])
   const supabase = await createClient()
 
-  const [{ data: slides }, { data: banners }] = await Promise.all([
+  const [{ data: slides }, { data: banners }, { data: whyChooseUsSetting }] = await Promise.all([
     supabase.from("hero_slides").select("*").order("sort_order", { ascending: true }),
     supabase.from("banners").select("*").order("sort_order", { ascending: true }),
+    supabase.from("site_settings").select("value").eq("key", "why_choose_us_image_url").maybeSingle(),
   ])
+
+  const whyChooseUsImageUrl = (whyChooseUsSetting?.value as string | undefined) ?? DEFAULT_WHY_CHOOSE_US_IMAGE
 
   return (
     <div className="flex flex-col gap-10">
       <div>
         <h1 className="font-serif text-2xl font-bold text-foreground">Contenu du site</h1>
         <p className="text-sm text-muted-foreground">
-          Gère le slider d&apos;accueil et les bannières promotionnelles — sans toucher au code.
+          Gère le slider d&apos;accueil, les bannières promotionnelles et les autres images du site — sans toucher au
+          code.
         </p>
       </div>
 
       <section className="flex flex-col gap-4">
-        <h2 className="font-serif text-lg font-semibold text-foreground">Slider d&apos;accueil</h2>
+        <div>
+          <h2 className="font-serif text-lg font-semibold text-foreground">Slider d&apos;accueil</h2>
+          <p className="text-xs text-muted-foreground">
+            Toutes les slides actives défilent automatiquement en haut de la page d&apos;accueil, comme un carrousel.
+          </p>
+        </div>
         <HeroSlideForm />
         <div className="flex flex-col gap-2">
           {(slides ?? []).map((s) => (
@@ -64,6 +76,11 @@ export default async function ContentPage() {
           ))}
           {(banners ?? []).length === 0 && <p className="text-sm text-muted-foreground">Aucune bannière pour l&apos;instant.</p>}
         </div>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="font-serif text-lg font-semibold text-foreground">Autres images du site</h2>
+        <WhyChooseUsImageForm currentImageUrl={whyChooseUsImageUrl} />
       </section>
     </div>
   )

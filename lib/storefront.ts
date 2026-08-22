@@ -207,21 +207,26 @@ export type SiteSettingsPublic = {
   whatsappNumber: string
   freeDeliveryThreshold: number
   announcements: string[]
+  whyChooseUsImageUrl: string
 }
 
 const DEFAULT_SITE_SETTINGS: SiteSettingsPublic = {
   whatsappNumber: "2250702602458",
   freeDeliveryThreshold: 20000,
   announcements: [],
+  whyChooseUsImageUrl: "/images/why-choose-us.webp",
 }
 
-/** Paramètres généraux du site (numéro WhatsApp, seuil de livraison offerte, annonces défilantes). */
+/**
+ * Paramètres généraux du site (numéro WhatsApp, seuil de livraison offerte, annonces défilantes,
+ * image de la section "Pourquoi nous choisir").
+ */
 export async function getSiteSettings(): Promise<SiteSettingsPublic> {
   const supabase = createAdminClient()
   const { data } = await supabase
     .from("site_settings")
     .select("key, value")
-    .in("key", ["whatsapp_number", "free_delivery_threshold", "announcements"])
+    .in("key", ["whatsapp_number", "free_delivery_threshold", "announcements", "why_choose_us_image_url"])
 
   const map = new Map((data ?? []).map((row) => [row.key, row.value]))
 
@@ -229,6 +234,7 @@ export async function getSiteSettings(): Promise<SiteSettingsPublic> {
     whatsappNumber: (map.get("whatsapp_number") as string) ?? DEFAULT_SITE_SETTINGS.whatsappNumber,
     freeDeliveryThreshold: (map.get("free_delivery_threshold") as number) ?? DEFAULT_SITE_SETTINGS.freeDeliveryThreshold,
     announcements: (map.get("announcements") as string[]) ?? DEFAULT_SITE_SETTINGS.announcements,
+    whyChooseUsImageUrl: (map.get("why_choose_us_image_url") as string) ?? DEFAULT_SITE_SETTINGS.whyChooseUsImageUrl,
   }
 }
 
@@ -243,34 +249,31 @@ export type StorefrontHeroSlide = {
 }
 
 /**
- * Slide "hero" à afficher en haut de la page d'accueil — géré depuis l'admin (Contenu du site).
- * On ne prend que le plus récemment modifié parmi les slides actifs : le hero n'affiche qu'une
- * seule image à la fois (contrairement au carrousel de bannières), donc la dernière modification
- * gagne. `null` si aucun slide actif n'existe encore (le composant Hero utilise alors un contenu
- * de secours codé en dur, pour ne jamais laisser la page d'accueil vide).
+ * Slides "hero" à faire défiler en haut de la page d'accueil — gérés depuis l'admin
+ * (Contenu du site). Tableau vide si aucun slide actif n'existe encore (le composant Hero
+ * utilise alors un contenu de secours codé en dur, pour ne jamais laisser la page d'accueil vide).
  */
-export async function getPrimaryHeroSlide(): Promise<StorefrontHeroSlide | null> {
+export async function getActiveHeroSlides(): Promise<StorefrontHeroSlide[]> {
   const supabase = createAdminClient()
   const { data } = await supabase
     .from("hero_slides")
     .select("id, eyebrow, title, subtitle, cta_label, cta_href, image_url")
     .eq("active", true)
     .not("image_url", "is", null)
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle()
+    .order("sort_order", { ascending: true })
+    .order("updated_at", { ascending: true })
 
-  if (!data || !data.image_url) return null
-
-  return {
-    id: data.id,
-    eyebrow: data.eyebrow,
-    title: data.title,
-    subtitle: data.subtitle,
-    ctaLabel: data.cta_label,
-    ctaHref: data.cta_href,
-    imageUrl: data.image_url,
-  }
+  return (data ?? [])
+    .filter((s): s is typeof s & { image_url: string } => Boolean(s.image_url))
+    .map((s) => ({
+      id: s.id,
+      eyebrow: s.eyebrow,
+      title: s.title,
+      subtitle: s.subtitle,
+      ctaLabel: s.cta_label,
+      ctaHref: s.cta_href,
+      imageUrl: s.image_url,
+    }))
 }
 
 export type StorefrontBanner = {

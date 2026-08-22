@@ -134,3 +134,47 @@ export async function deleteBanner(id: string, cloudinaryPublicId: string | null
   revalidatePath("/admin/contenu")
   revalidatePath("/")
 }
+
+const whyChooseUsImageSchema = z.object({
+  url: z.string().min(1),
+  publicId: z.string().min(1),
+})
+
+/**
+ * Remplace l'image de la section "Pourquoi nous choisir" de la page d'accueil — stockée comme
+ * deux paramètres généraux (why_choose_us_image_url / why_choose_us_cloudinary_public_id) plutôt
+ * que dans une table dédiée, puisqu'il n'y a qu'une seule image à gérer ici (pas une liste).
+ */
+export async function saveWhyChooseUsImage(input: z.infer<typeof whyChooseUsImageSchema>) {
+  const profile = await requireRole(CONTENT_ROLES)
+  const supabase = await createClient()
+  const parsed = whyChooseUsImageSchema.parse(input)
+
+  const { data: previous } = await supabase
+    .from("site_settings")
+    .select("value")
+    .eq("key", "why_choose_us_cloudinary_public_id")
+    .maybeSingle()
+
+  const { error: e1 } = await supabase
+    .from("site_settings")
+    .upsert({ key: "why_choose_us_image_url", value: parsed.url, updated_by: profile.id })
+  if (e1) throw new Error(e1.message)
+
+  const { error: e2 } = await supabase
+    .from("site_settings")
+    .upsert({ key: "why_choose_us_cloudinary_public_id", value: parsed.publicId, updated_by: profile.id })
+  if (e2) throw new Error(e2.message)
+
+  const previousPublicId = previous?.value as string | null
+  if (previousPublicId && previousPublicId !== parsed.publicId) {
+    try {
+      await deleteCloudinaryImage(previousPublicId)
+    } catch {
+      // pas bloquant
+    }
+  }
+
+  revalidatePath("/admin/contenu")
+  revalidatePath("/")
+}

@@ -1,4 +1,3 @@
-import Image from "next/image"
 import { Check } from "lucide-react"
 
 const points = [
@@ -8,17 +7,17 @@ const points = [
   "Des prix justes pour une qualité premium",
 ]
 
-export function WhyChooseUs() {
+export function WhyChooseUs({ imageUrl }: { imageUrl: string }) {
   return (
     <section id="a-propos" className="mx-auto max-w-7xl px-4 py-14 sm:px-6 md:py-20">
       <div className="grid items-center gap-10 md:grid-cols-2">
         <div className="relative order-last md:order-first">
           <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] border border-gold/30 shadow-2xl shadow-primary/10">
-            <Image
-              src="/images/why-choose-us.webp"
+            {/* eslint-disable-next-line @next/next/no-img-element -- image dynamique (locale ou Cloudinary), non listée dans next.config */}
+            <img
+              src={imageUrl}
               alt="Femme à la peau éclatante utilisant les soins Fleur de peau"
-              fill
-              className="object-cover"
+              className="absolute inset-0 h-full w-full object-cover"
             />
           </div>
           <div className="absolute -right-3 bottom-8 rounded-2xl border border-gold/40 bg-background px-5 py-3 text-center shadow-xl sm:-right-6">

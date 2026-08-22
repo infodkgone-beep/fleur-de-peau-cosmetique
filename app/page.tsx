@@ -13,19 +13,19 @@ import { PwaInstallButton } from "@/components/pwa-install-button"
 import {
   getActiveBanners,
   getActiveCategories,
+  getActiveHeroSlides,
   getActiveProducts,
-  getPrimaryHeroSlide,
   getSiteSettings,
 } from "@/lib/storefront"
 
 export const revalidate = 60
 
 export default async function Page() {
-  const [products, categories, settings, heroSlide, banners] = await Promise.all([
+  const [products, categories, settings, heroSlides, banners] = await Promise.all([
     getActiveProducts(),
     getActiveCategories(),
     getSiteSettings(),
-    getPrimaryHeroSlide(),
+    getActiveHeroSlides(),
     getActiveBanners(),
   ])
 
@@ -44,13 +44,13 @@ export default async function Page() {
       <SiteHeader />
       <CategoryRail categories={categories} />
       <BannerCarousel banners={banners} />
-      <Hero slide={heroSlide} />
+      <Hero slides={heroSlides} />
       <div className="flex flex-col">
         <Products products={products} whatsappNumber={settings.whatsappNumber} />
         <Promotions whatsappNumber={settings.whatsappNumber} />
       </div>
       <TrustBanner />
-      <WhyChooseUs />
+      <WhyChooseUs imageUrl={settings.whyChooseUsImageUrl} />
       <SiteFooter />
       <WhatsAppFloat whatsappNumber={settings.whatsappNumber} />
       <PwaInstallButton />

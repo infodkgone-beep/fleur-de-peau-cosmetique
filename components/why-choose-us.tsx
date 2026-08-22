@@ -27,7 +27,7 @@ export function WhyChooseUs() {
           </div>
         </div>
 
-        <div>
+        <div className="rounded-3xl bg-background/90 p-6 backdrop-blur-sm sm:p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-gold-foreground">Pourquoi nous choisir</p>
           <h2 className="mt-3 text-balance font-serif text-3xl font-bold text-foreground sm:text-4xl">
             Prends soin de ta peau, elle te le rendra

@@ -185,6 +185,22 @@ export async function getSimilarProducts(categoryId: string | null, excludeId: s
   })
 }
 
+/**
+ * Marques partenaires (produits importés vendus en boutique), pour le bandeau de confiance
+ * de la page d'accueil. Toutes les marques de la table sont affichées — pas seulement celles
+ * ayant déjà un produit publié — pour que la liste reflète immédiatement les marques que la
+ * boutique annonce vendre, sans dépendre de la publication individuelle des fiches produits.
+ */
+export async function getPartnerBrands(): Promise<string[]> {
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from("brands")
+    .select("name")
+    .eq("active", true)
+    .order("name", { ascending: true })
+  return (data ?? []).map((b) => b.name)
+}
+
 /** Catégories actives, pour la page d'accueil. */
 export async function getActiveCategories() {
   const supabase = createAdminClient()

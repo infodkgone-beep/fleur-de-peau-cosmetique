@@ -6,6 +6,7 @@ import { CategoryRail } from "@/components/category-rail"
 import { Promotions } from "@/components/promotions"
 import { Products } from "@/components/products"
 import { TrustBanner } from "@/components/trust-banner"
+import { BrandStrip } from "@/components/brand-strip"
 import { WhyChooseUs } from "@/components/why-choose-us"
 import { SiteFooter } from "@/components/site-footer"
 import { WhatsAppFloat } from "@/components/whatsapp-float"
@@ -15,18 +16,20 @@ import {
   getActiveCategories,
   getActiveHeroSlides,
   getActiveProducts,
+  getPartnerBrands,
   getSiteSettings,
 } from "@/lib/storefront"
 
 export const revalidate = 60
 
 export default async function Page() {
-  const [products, categories, settings, heroSlides, banners] = await Promise.all([
+  const [products, categories, settings, heroSlides, banners, brands] = await Promise.all([
     getActiveProducts(),
     getActiveCategories(),
     getSiteSettings(),
     getActiveHeroSlides(),
     getActiveBanners(),
+    getPartnerBrands(),
   ])
 
   return (
@@ -50,6 +53,7 @@ export default async function Page() {
         <Promotions whatsappNumber={settings.whatsappNumber} />
       </div>
       <TrustBanner />
+      <BrandStrip brands={brands} />
       <WhyChooseUs imageUrl={settings.whyChooseUsImageUrl} />
       <SiteFooter />
       <WhatsAppFloat whatsappNumber={settings.whatsappNumber} />

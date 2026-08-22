@@ -178,3 +178,39 @@ export async function saveWhyChooseUsImage(input: z.infer<typeof whyChooseUsImag
   revalidatePath("/admin/contenu")
   revalidatePath("/")
 }
+
+const brandLogoSchema = z.object({
+  brandId: z.string().uuid(),
+  url: z.string().min(1),
+  publicId: z.string().min(1),
+})
+
+/** Ajoute/remplace le logo d'une marque (bandeau "Nos marques" de la page d'accueil). */
+export async function saveBrandLogo(input: z.infer<typeof brandLogoSchema>) {
+  await requireRole(CONTENT_ROLES)
+  const supabase = await createClient()
+  const parsed = brandLogoSchema.parse(input)
+
+  const { data: previous } = await supabase
+    .from("brands")
+    .select("logo_public_id")
+    .eq("id", parsed.brandId)
+    .maybeSingle()
+
+  const { error } = await supabase
+    .from("brands")
+    .update({ logo_url: parsed.url, logo_public_id: parsed.publicId })
+    .eq("id", parsed.brandId)
+  if (error) throw new Error(error.message)
+
+  if (previous?.logo_public_id && previous.logo_public_id !== parsed.publicId) {
+    try {
+      await deleteCloudinaryImage(previous.logo_public_id)
+    } catch {
+      // pas bloquant
+    }
+  }
+
+  revalidatePath("/admin/contenu")
+  revalidatePath("/")
+}

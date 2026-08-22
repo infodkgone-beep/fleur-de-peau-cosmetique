@@ -167,3 +167,21 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Défilement continu du bandeau "Nos marques" (components/brand-strip.tsx). */
+@keyframes brand-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.brand-marquee {
+  animation: brand-marquee-scroll 30s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-marquee {
+    animation: none;
+  }
+}

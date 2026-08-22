@@ -4,6 +4,7 @@ import { HeroSlideForm } from "@/components/admin/hero-slide-form"
 import { BannerForm } from "@/components/admin/banner-form"
 import { HeroSlideRowActions, BannerRowActions } from "@/components/admin/content-row-actions"
 import { WhyChooseUsImageForm } from "@/components/admin/why-choose-us-image-form"
+import { BrandLogoForm } from "@/components/admin/brand-logo-form"
 
 const DEFAULT_WHY_CHOOSE_US_IMAGE = "/images/why-choose-us.webp"
 
@@ -11,10 +12,11 @@ export default async function ContentPage() {
   await requireRole(["super_admin", "content_manager"])
   const supabase = await createClient()
 
-  const [{ data: slides }, { data: banners }, { data: whyChooseUsSetting }] = await Promise.all([
+  const [{ data: slides }, { data: banners }, { data: whyChooseUsSetting }, { data: brands }] = await Promise.all([
     supabase.from("hero_slides").select("*").order("sort_order", { ascending: true }),
     supabase.from("banners").select("*").order("sort_order", { ascending: true }),
     supabase.from("site_settings").select("value").eq("key", "why_choose_us_image_url").maybeSingle(),
+    supabase.from("brands").select("id, name, logo_url").eq("active", true).order("name", { ascending: true }),
   ])
 
   const whyChooseUsImageUrl = (whyChooseUsSetting?.value as string | undefined) ?? DEFAULT_WHY_CHOOSE_US_IMAGE
@@ -76,6 +78,17 @@ export default async function ContentPage() {
           ))}
           {(banners ?? []).length === 0 && <p className="text-sm text-muted-foreground">Aucune bannière pour l&apos;instant.</p>}
         </div>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <div>
+          <h2 className="font-serif text-lg font-semibold text-foreground">Logos des marques</h2>
+          <p className="text-xs text-muted-foreground">
+            Le bandeau &quot;Nos marques&quot; de la page d&apos;accueil affiche ces logos une fois ajoutés (texte en
+            attendant).
+          </p>
+        </div>
+        <BrandLogoForm brands={brands ?? []} />
       </section>
 
       <section className="flex flex-col gap-4">

@@ -47,6 +47,7 @@ export type BrandRow = {
   name: string
   slug: string
   logo_url: string | null
+  logo_public_id: string | null
   active: boolean
   created_at: string
 }

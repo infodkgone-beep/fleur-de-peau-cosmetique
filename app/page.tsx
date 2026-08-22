@@ -48,12 +48,12 @@ export default async function Page() {
       <CategoryRail categories={categories} />
       <BannerCarousel banners={banners} />
       <Hero slides={heroSlides} />
+      <BrandStrip brands={brands} />
       <div className="flex flex-col">
         <Products products={products} whatsappNumber={settings.whatsappNumber} />
         <Promotions whatsappNumber={settings.whatsappNumber} />
       </div>
       <TrustBanner />
-      <BrandStrip brands={brands} />
       <WhyChooseUs imageUrl={settings.whyChooseUsImageUrl} />
       <SiteFooter />
       <WhatsAppFloat whatsappNumber={settings.whatsappNumber} />

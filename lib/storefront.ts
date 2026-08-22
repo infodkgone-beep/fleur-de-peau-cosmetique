@@ -191,14 +191,16 @@ export async function getSimilarProducts(categoryId: string | null, excludeId: s
  * ayant déjà un produit publié — pour que la liste reflète immédiatement les marques que la
  * boutique annonce vendre, sans dépendre de la publication individuelle des fiches produits.
  */
-export async function getPartnerBrands(): Promise<string[]> {
+export type StorefrontBrand = { name: string; logoUrl: string | null }
+
+export async function getPartnerBrands(): Promise<StorefrontBrand[]> {
   const supabase = createAdminClient()
   const { data } = await supabase
     .from("brands")
-    .select("name")
+    .select("name, logo_url")
     .eq("active", true)
     .order("name", { ascending: true })
-  return (data ?? []).map((b) => b.name)
+  return (data ?? []).map((b) => ({ name: b.name, logoUrl: b.logo_url }))
 }
 
 /** Catégories actives, pour la page d'accueil. */

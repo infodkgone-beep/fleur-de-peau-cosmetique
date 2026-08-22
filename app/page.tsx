@@ -29,7 +29,7 @@ export default async function Page() {
           transparentes (hero, bannières de confiance...). */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 bg-repeat opacity-[0.22]"
+        className="pointer-events-none absolute inset-0 bg-repeat opacity-[0.3]"
         style={{ backgroundImage: "url('/images/bg-motifs-accueil.webp')" }}
       />
       <AnnouncementBar announcements={settings.announcements} />

@@ -20,18 +20,25 @@ export function BrandStrip({ brands }: { brands: StorefrontBrand[] }) {
 
       <div className="group relative mt-5 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
         <div className="brand-marquee flex w-max items-center gap-10 group-hover:[animation-play-state:paused]">
-          {track.map((brand, index) => (
-            <div key={`${brand.name}-${index}`} className="flex h-16 flex-shrink-0 items-center justify-center px-2">
-              {brand.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element -- logo dynamique (Cloudinary), non listé dans next.config
-                <img src={brand.logoUrl} alt={brand.name} className="h-12 w-auto max-w-[9rem] object-contain" />
-              ) : (
+          {track.map((brand, index) =>
+            brand.logoUrl ? (
+              <div key={`${brand.name}-${index}`} className="flex flex-shrink-0 flex-col items-center gap-2 px-2">
+                <div className="flex h-16 items-center justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- logo dynamique (Cloudinary), non listé dans next.config */}
+                  <img src={brand.logoUrl} alt={brand.name} className="h-12 w-auto max-w-[9rem] object-contain" />
+                </div>
+                <span className="whitespace-nowrap text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {brand.name}
+                </span>
+              </div>
+            ) : (
+              <div key={`${brand.name}-${index}`} className="flex h-16 flex-shrink-0 items-center justify-center px-2">
                 <span className="whitespace-nowrap rounded-full border border-gold/30 bg-card px-5 py-2.5 text-sm font-semibold uppercase tracking-wide text-foreground shadow-sm">
                   {brand.name}
                 </span>
-              )}
-            </div>
-          ))}
+              </div>
+            )
+          )}
         </div>
       </div>
     </section>

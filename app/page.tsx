@@ -22,7 +22,16 @@ export default async function Page() {
   ])
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="relative min-h-screen bg-background">
+      {/* Motif de fond décoratif (icônes cosmétiques), en filigrane léger derrière le contenu —
+          uniquement sur la page d'accueil. Les sections qui ont leur propre fond (produits,
+          pied de page...) le recouvrent naturellement ; il ne reste visible que dans les zones
+          transparentes (hero, bannières de confiance...). */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 bg-repeat opacity-[0.07]"
+        style={{ backgroundImage: "url('/images/bg-motifs-accueil.webp')" }}
+      />
       <AnnouncementBar announcements={settings.announcements} />
       <SiteHeader />
       <CategoryRail categories={categories} />
